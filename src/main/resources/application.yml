@@ -1,0 +1,118 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: quikko
+
+  # Redis auto-configuration is excluded by default so that a fresh checkout
+  # runs with zero external dependencies (see quikko.matching.queue-store: memory
+  # below). Activate the "redis" profile to switch to a real Redis-backed queue.
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+
+  # Local dev default: in-memory H2 database (no Postgres required).
+  datasource:
+    url: jdbc:h2:mem:quikko;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jackson:
+    default-property-inclusion: non_null
+
+# ---------------------------------------------------------------------------
+# Quikko application settings
+# ---------------------------------------------------------------------------
+quikko:
+  matching:
+    # memory (default, zero setup) | redis (requires the "redis" profile / a running Redis)
+    queue-store: memory
+    # how long a user waits for an interest-overlap match before falling back
+    # to matching with anyone available in the queue
+    fallback-after-seconds: 7
+    # how often the matchmaking scheduler scans the queue
+    poll-interval-ms: 1000
+
+  moderation:
+    # number of reports against a session before its IP is temporarily banned
+    report-ban-threshold: 5
+    ban-duration-minutes: 60
+    # simple configurable profanity list, comma separated, case-insensitive
+    profanity-words: fuck,shit,bitch,asshole,cunt,nigger,faggot
+
+  rate-limit:
+    max-joins-per-window: 10
+    window-seconds: 60
+
+  webrtc:
+    stun-urls: stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302
+    turn-url: ${TURN_URL:}
+    turn-username: ${TURN_USERNAME:}
+    turn-credential: ${TURN_CREDENTIAL:}
+
+  interests:
+    suggested: Music,Movies,Gaming,Sports,Books,Travel,Technology,Art,Food,Anime,Fitness,Science,Photography,Fashion,Nature,Comedy,Cars,Cooking,Pets,Politics
+
+  capsule:
+    unlock-after-days: 7
+    max-length: 280
+    # cron for the daily unlock-check job (default: 03:00 every day)
+    unlock-check-cron: "0 0 3 * * *"
+
+logging:
+  level:
+    com.quikko: INFO
+
+---
+# Real Redis-backed matching queue / ban list / report counters.
+# Activate with SPRING_PROFILES_ACTIVE=redis (can be combined with "postgres").
+spring:
+  config:
+    activate:
+      on-profile: redis
+  autoconfigure:
+    exclude:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+quikko:
+  matching:
+    queue-store: redis
+
+---
+# Real PostgreSQL persistence for Time Capsules.
+# Activate with SPRING_PROFILES_ACTIVE=postgres (can be combined with "redis").
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:quikko}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:quikko}
+    password: ${DB_PASSWORD:quikko}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
