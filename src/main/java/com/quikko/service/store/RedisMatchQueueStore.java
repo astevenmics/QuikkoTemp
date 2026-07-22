@@ -47,6 +47,7 @@ public class RedisMatchQueueStore implements MatchQueueStore {
         h.put("interests", String.join(",", user.getInterests()));
         h.put("ip", nullToEmpty(user.getIp()));
         h.put("queuedAt", String.valueOf(user.getQueuedAt().toEpochMilli()));
+        h.put("videoEnabled", String.valueOf(user.isVideoEnabled()));
         redis.opsForHash().putAll(QUEUE_USER_PREFIX + user.getAnonId(), h);
     }
 
@@ -81,8 +82,9 @@ public class RedisMatchQueueStore implements MatchQueueStore {
         Set<String> interests = splitToSet((String) h.get("interests"));
         String ip = (String) h.get("ip");
         long queuedAt = Long.parseLong((String) h.get("queuedAt"));
+        boolean videoEnabled = !"false".equals(h.get("videoEnabled"));
         return new ChatUser(anonId, (String) h.get("sessionId"), interests,
-                ip == null || ip.isBlank() ? null : ip, Instant.ofEpochMilli(queuedAt));
+                ip == null || ip.isBlank() ? null : ip, Instant.ofEpochMilli(queuedAt), videoEnabled);
     }
 
     @Override

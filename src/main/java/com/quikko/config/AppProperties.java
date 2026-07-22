@@ -19,6 +19,7 @@ public class AppProperties {
     private final Webrtc webrtc = new Webrtc();
     private final Interests interests = new Interests();
     private final Capsule capsule = new Capsule();
+    private final Captcha captcha = new Captcha();
 
     public Matching getMatching() {
         return matching;
@@ -42,6 +43,10 @@ public class AppProperties {
 
     public Capsule getCapsule() {
         return capsule;
+    }
+
+    public Captcha getCaptcha() {
+        return captcha;
     }
 
     public static class Matching {
@@ -228,6 +233,27 @@ public class AppProperties {
 
         public void setUnlockCheckCron(String unlockCheckCron) {
             this.unlockCheckCron = unlockCheckCron;
+        }
+    }
+
+    public static class Captcha {
+        private boolean enabled = true;
+        private int ttlSeconds = 300;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public int getTtlSeconds() {
+            return ttlSeconds;
+        }
+
+        public void setTtlSeconds(int ttlSeconds) {
+            this.ttlSeconds = ttlSeconds;
         }
     }
 }

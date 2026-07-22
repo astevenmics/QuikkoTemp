@@ -15,13 +15,16 @@ public class ChatUser {
     private final Set<String> interests;
     private final String ip;
     private final Instant queuedAt;
+    private final boolean videoEnabled;
 
-    public ChatUser(String anonId, String sessionId, Set<String> interests, String ip, Instant queuedAt) {
+    public ChatUser(String anonId, String sessionId, Set<String> interests, String ip, Instant queuedAt,
+                     boolean videoEnabled) {
         this.anonId = anonId;
         this.sessionId = sessionId;
         this.interests = interests;
         this.ip = ip;
         this.queuedAt = queuedAt;
+        this.videoEnabled = videoEnabled;
     }
 
     public String getAnonId() {
@@ -42,5 +45,9 @@ public class ChatUser {
 
     public Instant getQueuedAt() {
         return queuedAt;
+    }
+
+    public boolean isVideoEnabled() {
+        return videoEnabled;
     }
 }

@@ -4,6 +4,7 @@ import com.quikko.model.MatchPair;
 import com.quikko.model.dto.MatchActionRequest;
 import com.quikko.model.dto.QueueJoinRequest;
 import com.quikko.model.dto.ServerEvent;
+import com.quikko.service.CaptchaService;
 import com.quikko.service.MatchingService;
 import com.quikko.service.RateLimiterService;
 import com.quikko.service.ReportService;
@@ -24,15 +25,17 @@ public class QueueController {
     private final SessionRegistry sessionRegistry;
     private final RateLimiterService rateLimiterService;
     private final ReportService reportService;
+    private final CaptchaService captchaService;
     private final SessionMessenger messenger;
 
     public QueueController(MatchingService matchingService, SessionRegistry sessionRegistry,
                             RateLimiterService rateLimiterService, ReportService reportService,
-                            SessionMessenger messenger) {
+                            CaptchaService captchaService, SessionMessenger messenger) {
         this.matchingService = matchingService;
         this.sessionRegistry = sessionRegistry;
         this.rateLimiterService = rateLimiterService;
         this.reportService = reportService;
+        this.captchaService = captchaService;
         this.messenger = messenger;
     }
 
@@ -56,8 +59,21 @@ public class QueueController {
             return;
         }
 
+        // The CAPTCHA only needs to be cleared once per connection (Skip
+        // re-joins the queue on the same session and shouldn't have to
+        // solve it again).
+        if (captchaService.isEnabled() && !sessionRegistry.isCaptchaVerified(sessionId)) {
+            if (!captchaService.consumeIfSolved(req.getCaptchaId())) {
+                messenger.send(req.getAnonId(), ServerEvent.of(ServerEvent.Type.CAPTCHA_FAILED)
+                        .message("Please solve the verification challenge before starting."));
+                return;
+            }
+            sessionRegistry.markCaptchaVerified(sessionId);
+        }
+
         Set<String> interests = req.getInterests() == null ? Set.of() : new LinkedHashSet<>(req.getInterests());
-        matchingService.joinQueue(req.getAnonId(), sessionId, interests, ip);
+        boolean videoEnabled = req.getVideoEnabled() == null || req.getVideoEnabled();
+        matchingService.joinQueue(req.getAnonId(), sessionId, interests, ip, videoEnabled);
     }
 
     @MessageMapping("/queue.leave")
