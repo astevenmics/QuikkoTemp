@@ -66,8 +66,10 @@ src/main/java/com/quikko/
   scheduler/                   CapsuleScheduler (daily unlock sweep)
 
 src/main/resources/
-  application.yml              All externalized config (see below)
-  static/                      index.html, chat.html, capsule.html, css/, js/
+  application.properties           Default config (see below)
+  application-redis.properties     Redis profile overrides
+  application-postgres.properties  PostgreSQL profile overrides
+  static/                          index.html, chat.html, capsule.html, css/, js/
 ```
 
 ## Running locally (zero setup)
@@ -94,11 +96,11 @@ browsers treat `localhost` as a secure context for WebRTC).
    (this is by design — see below for how to shortcut it while testing).
 
 To test the 7-day unlock without waiting a week, either:
-- temporarily set `quikko.capsule.unlock-after-days: 0` in `application.yml` and restart, or
+- temporarily set `quikko.capsule.unlock-after-days=0` in `application.properties` and restart, or
 - open the H2 console at `/h2-console` (JDBC URL `jdbc:h2:mem:quikko`, user `sa`, blank
   password) and manually back-date the `UNLOCK_AT` column of the two `CAPSULES` rows.
 
-## Configuration reference (`application.yml`)
+## Configuration reference (`application.properties`)
 
 All settings live under the `quikko.*` tree and can be overridden with environment
 variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`) or
