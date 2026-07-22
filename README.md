@@ -32,7 +32,7 @@ delayed-reveal note for the person they just talked to ("Time Capsule").
 | Realtime signaling    | Spring WebSocket + STOMP (SockJS fallback) |
 | Video                 | WebRTC (browser-native), STUN + optional TURN |
 | Matching queue / bans | Pluggable: in-memory (default) or Redis |
-| Time Capsule storage  | Spring Data JPA — H2 (default) or PostgreSQL |
+| Time Capsule storage  | Spring Data JPA — H2 (default) or MySQL |
 | Scheduling            | Spring `@Scheduled` |
 | Frontend              | Plain HTML/CSS/JS, no framework |
 
@@ -68,13 +68,13 @@ src/main/java/com/quikko/
 src/main/resources/
   application.properties           Default config (see below)
   application-redis.properties     Redis profile overrides
-  application-postgres.properties  PostgreSQL profile overrides
+  application-mysql.properties      MySQL profile overrides
   static/                          index.html, chat.html, capsule.html, css/, js/
 ```
 
 ## Running locally (zero setup)
 
-Requires JDK 21 and Maven. No Redis, no Postgres, no `.env` file needed — the default
+Requires JDK 21 and Maven. No Redis, no MySQL, no `.env` file needed — the default
 profile uses an in-memory H2 database and an in-memory matching queue.
 
 ```bash
@@ -128,9 +128,9 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 | `PORT` | HTTP port (default 8080) |
 | `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL` | TURN server for WebRTC relay in production |
 | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis connection (only read when the `redis` profile is active) |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL connection (only read when the `postgres` profile is active) |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | MySQL connection (only read when the `mysql` profile is active; `DB_PORT` defaults to `3306`) |
 
-### Switching to Redis and/or PostgreSQL
+### Switching to Redis and/or MySQL
 
 Both are independent Spring profiles and can be combined:
 
@@ -138,20 +138,20 @@ Both are independent Spring profiles and can be combined:
 # Redis-backed matching queue/bans, still using H2 for capsules
 SPRING_PROFILES_ACTIVE=redis mvn spring-boot:run
 
-# PostgreSQL for Time Capsules, still using the in-memory queue
-SPRING_PROFILES_ACTIVE=postgres mvn spring-boot:run
+# MySQL for Time Capsules, still using the in-memory queue
+SPRING_PROFILES_ACTIVE=mysql mvn spring-boot:run
 
 # Both, production-style
-SPRING_PROFILES_ACTIVE=postgres,redis \
+SPRING_PROFILES_ACTIVE=mysql,redis \
 REDIS_HOST=redis.internal DB_HOST=db.internal DB_USERNAME=quikko DB_PASSWORD=secret \
 mvn spring-boot:run
 ```
 
-Run a local Redis/Postgres for testing this with Docker:
+Run a local Redis/MySQL for testing this with Docker:
 
 ```bash
 docker run -p 6379:6379 redis:7
-docker run -p 5432:5432 -e POSTGRES_DB=quikko -e POSTGRES_USER=quikko -e POSTGRES_PASSWORD=quikko postgres:16
+docker run -p 3306:3306 -e MYSQL_DATABASE=quikko -e MYSQL_USER=quikko -e MYSQL_PASSWORD=quikko -e MYSQL_ROOT_PASSWORD=root mysql:8
 ```
 
 ## Production deployment notes
@@ -169,8 +169,8 @@ docker run -p 5432:5432 -e POSTGRES_DB=quikko -e POSTGRES_USER=quikko -e POSTGRE
   correctly with a single app instance — matching, IP bans, and rate limits are all
   process-local otherwise. Activate the `redis` profile once you run more than one
   instance or need state to survive a restart.
-- **Use PostgreSQL, not H2, in production** — H2 here runs in `mem` mode and loses all
-  Time Capsules on restart. Activate the `postgres` profile.
+- **Use MySQL, not H2, in production** — H2 here runs in `mem` mode and loses all
+  Time Capsules on restart. Activate the `mysql` profile.
 - **WebSocket-aware load balancing.** If you run multiple instances behind a load
   balancer, either enable sticky sessions for the `/ws` endpoint or move to a
   broker-relay STOMP setup (e.g. `enableStompBrokerRelay` with a real message broker
