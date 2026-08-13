@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quikko — Time Capsule</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="bg-blobs" aria-hidden="true"></div>
+
+<main class="landing">
+  <header class="brand">
+    <a href="/" class="logo">⚡ Quikko</a>
+    <p class="tagline">📦 Time Capsule claim</p>
+  </header>
+
+  <section class="card start-card">
+    <h2>Got a claim token?</h2>
+    <p class="hint">
+      Paste the token you were given when you left a Time Capsule. If your stranger left one for you too,
+      and it's been 7 days, it'll unlock right here.
+    </p>
+
+    <div class="free-input-row">
+      <input id="tokenInput" type="text" placeholder="Paste your capsule token…" autocomplete="off">
+      <button id="claimBtn" class="btn btn-primary" type="button">Check</button>
+    </div>
+
+    <div id="claimResult" class="claim-result" hidden></div>
+  </section>
+</main>
+
+<script src="/js/capsule.js"></script>
+</body>
+</html>

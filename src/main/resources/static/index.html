@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quikko — Talk to someone new</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="bg-blobs" aria-hidden="true"></div>
+
+<main class="landing">
+    <header class="brand">
+        <div class="logo">⚡ Quikko</div>
+        <p class="tagline">Meet someone new, right now. No sign-up, no strings.</p>
+    </header>
+
+    <section class="card start-card">
+        <h2>Pick a few interests <span class="muted">(optional)</span></h2>
+        <p class="hint">We'll try to match you with a stranger who's into the same stuff first.</p>
+
+        <div id="chipList" class="chip-list"></div>
+
+        <div class="free-input-row">
+            <input id="customInterest" type="text" maxlength="40" placeholder="Add your own interest…">
+            <button id="addInterestBtn" class="btn btn-ghost" type="button">Add</button>
+        </div>
+
+        <div class="mode-row">
+            <label class="mode-toggle">
+                <input type="checkbox" id="videoToggle" checked>
+                <span>Enable camera &amp; mic for video chat</span>
+            </label>
+        </div>
+
+        <button id="startBtn" class="btn btn-primary btn-lg" type="button">🚀 Start chatting</button>
+
+        <p class="fineprint">
+            By starting, you agree you're <strong>18 or older</strong> and accept our
+            <a href="#" id="openTerms">Terms</a>. Be kind. Reports are taken seriously.
+        </p>
+    </section>
+
+    <section class="features">
+        <div class="feature">
+            <div class="feature-emoji">🎯</div>
+            <h3>Common Ground</h3>
+            <p>Share an interest with your match and we'll drop an icebreaker to get the conversation going.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-emoji">📦</div>
+            <h3>Time Capsule</h3>
+            <p>Leave a note for someone you clicked with. If they leave one for you too, it unlocks in 7 days.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-emoji">🕶️</div>
+            <h3>Totally anonymous</h3>
+            <p>No accounts, no names, no personal data. Just a random id for this session.</p>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <span>quikko.xyz</span> · <a href="/capsule">Claim a Time Capsule</a>
+    </footer>
+</main>
+
+<div id="ageGateModal" class="modal-overlay" hidden>
+    <div class="modal">
+        <h2>Before you jump in…</h2>
+        <p>Quikko connects you with random strangers over video and text. To continue you must confirm:</p>
+        <ul class="modal-list">
+            <li>✅ I am <strong>18 years of age or older</strong>.</li>
+            <li>✅ I accept the <a href="#" id="openTermsInline">Terms of Use</a> and understand chats are not moderated in real time.</li>
+            <li>✅ I will use the <strong>Report</strong> button for anything inappropriate.</li>
+        </ul>
+        <div class="modal-actions">
+            <button id="declineAge" class="btn btn-ghost" type="button">Leave</button>
+            <button id="acceptAge" class="btn btn-primary" type="button">I'm 18+, let's go</button>
+        </div>
+    </div>
+</div>
+
+<div id="termsModal" class="modal-overlay" hidden>
+    <div class="modal">
+        <h2>Terms of Use (short version)</h2>
+        <div class="terms-text">
+            <p>Quikko is a random chat service provided "as is" with no warranty. You must be 18+ to use it.
+                Don't use it for anything illegal, to harass others, or to share content involving minors — accounts
+                doing so will be banned and may be reported to authorities.</p>
+            <p>We don't collect accounts or personal data. Video/audio is peer-to-peer between you and your match
+                and is not recorded by Quikko. Text chat is relayed through our server in real time to enable the
+                chat and is not stored, except for optional Time Capsule messages you explicitly choose to leave.</p>
+            <p>Use the Report button for anything that violates these terms. Repeated reports against a connection
+                result in a temporary ban.</p>
+        </div>
+        <div class="modal-actions">
+            <button id="closeTerms" class="btn btn-primary" type="button">Got it</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

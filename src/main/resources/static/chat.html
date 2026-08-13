@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quikko — Chatting</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="chat-body">
+
+<header class="chat-topbar">
+    <a href="/" class="logo small">⚡ Quikko</a>
+    <div id="statusPill" class="status-pill status-idle">Connecting…</div>
+</header>
+
+<div id="icebreakerBanner" class="icebreaker-banner" hidden>
+    <span id="icebreakerText"></span>
+</div>
+
+<main class="chat-layout">
+    <section class="video-pane">
+        <div class="video-wrap remote-wrap">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <div id="remoteOverlay" class="video-overlay">Waiting for a stranger…</div>
+        </div>
+        <div class="video-wrap local-wrap">
+            <video id="localVideo" autoplay playsinline muted></video>
+        </div>
+    </section>
+
+    <section class="chat-pane">
+        <div id="chatLog" class="chat-log" aria-live="polite"></div>
+        <form id="chatForm" class="chat-input-row">
+            <input id="chatInput" type="text" maxlength="1000" placeholder="Say hi…" autocomplete="off">
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </section>
+</main>
+
+<footer class="chat-toolbar">
+    <button id="skipBtn" class="btn btn-accent" type="button">⏭ Skip</button>
+    <button id="stopBtn" class="btn btn-ghost" type="button">⏹ Stop</button>
+    <button id="reportBtn" class="btn btn-danger" type="button">🚩 Report</button>
+    <label class="mode-toggle small">
+        <input type="checkbox" id="camToggle" checked>
+        <span>Cam</span>
+    </label>
+    <label class="mode-toggle small">
+        <input type="checkbox" id="micToggle" checked>
+        <span>Mic</span>
+    </label>
+</footer>
+
+<div id="capsuleModal" class="modal-overlay" hidden>
+    <div class="modal">
+        <h2>📦 Leave a Time Capsule?</h2>
+        <p>Write a short note for the stranger you just talked to. If <em>they</em> leave one for you too,
+            it'll unlock for both of you in 7 days — otherwise it quietly disappears.</p>
+        <textarea id="capsuleText" maxlength="280" rows="4" placeholder="Say something nice… (max 280 characters)"></textarea>
+        <div class="char-count"><span id="capsuleCharCount">0</span>/280</div>
+        <div id="capsuleTokenBox" class="capsule-token-box" hidden>
+            <p>Your claim token (save it — you'll need it on the <a href="/capsule" target="_blank">Capsule page</a> after 7 days):</p>
+            <code id="capsuleToken"></code>
+            <button id="copyTokenBtn" class="btn btn-ghost" type="button">Copy</button>
+        </div>
+        <div class="modal-actions">
+            <button id="skipCapsuleBtn" class="btn btn-ghost" type="button">No thanks, continue</button>
+            <button id="sendCapsuleBtn" class="btn btn-primary" type="button">Leave capsule &amp; continue</button>
+        </div>
+    </div>
+</div>
+
+<script src="/webjars/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
+<script src="/js/chat.js"></script>
+</body>
+</html>
