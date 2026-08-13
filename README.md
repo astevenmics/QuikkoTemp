@@ -108,7 +108,7 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 
 | Property | Default | Purpose |
 |---|---|---|
-| `quikko.matching.queue-store` | `memory` | `memory` or `redis` — selects which `MatchQueueStore`/`ModerationStore` bean is active |
+| `quikko.matching.queue-store` | `memory` | `memory` or `redis` — the single switch that controls everything Redis-related: which `MatchQueueStore`/`ModerationStore` bean is active *and* whether the Redis connection beans (`RedisConfig`) get created at all. Setting this alone is sufficient — no separate profile required (see below) |
 | `quikko.matching.fallback-after-seconds` | `7` | How long to hold out for an interest-overlap match before pairing with anyone |
 | `quikko.matching.poll-interval-ms` | `1000` | How often the matchmaking scheduler runs |
 | `quikko.moderation.report-ban-threshold` | `5` | Reports against an IP before it's temporarily banned |
@@ -127,12 +127,16 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 |---|---|
 | `PORT` | HTTP port (default 8080) |
 | `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL` | TURN server for WebRTC relay in production |
-| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis connection (only read when the `redis` profile is active) |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis connection (only read when `quikko.matching.queue-store=redis`) |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | MySQL connection (only read when the `mysql` profile is active; `DB_PORT` defaults to `3306`) |
 
 ### Switching to Redis and/or MySQL
 
-Both are independent Spring profiles and can be combined:
+The `mysql` and `redis` Spring profiles are convenience bundles — each just sets the
+relevant `quikko.*`/`spring.datasource.*` properties together with sensible env-var
+defaults. They can be combined, or you can set the underlying properties directly
+without activating a profile at all (e.g. `QUIKKO_MATCHING_QUEUE_STORE=redis` plus
+`SPRING_DATA_REDIS_HOST=...`) — either way works identically.
 
 ```bash
 # Redis-backed matching queue/bans, still using H2 for capsules
