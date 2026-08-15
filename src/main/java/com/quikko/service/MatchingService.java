@@ -45,12 +45,12 @@ public class MatchingService {
         this.pairRegistry = pairRegistry;
     }
 
-    public void joinQueue(String anonId, String sessionId, Set<String> interests, String ip) {
+    public void joinQueue(String anonId, String sessionId, Set<String> interests, String ip, boolean videoEnabled) {
         if (store.getPairForUser(anonId).isPresent()) {
             return;
         }
         Set<String> normalized = normalize(interests);
-        store.enqueue(new ChatUser(anonId, sessionId, normalized, ip, Instant.now()));
+        store.enqueue(new ChatUser(anonId, sessionId, normalized, ip, Instant.now(), videoEnabled));
         messenger.send(anonId, ServerEvent.of(ServerEvent.Type.WAITING));
     }
 
@@ -165,14 +165,16 @@ public class MatchingService {
                 .partnerInterests(List.copyOf(b.getInterests()))
                 .sharedInterests(List.copyOf(shared))
                 .icebreaker(icebreaker)
-                .initiator(true));
+                .initiator(true)
+                .partnerVideoEnabled(b.isVideoEnabled()));
 
         messenger.send(b.getAnonId(), ServerEvent.of(ServerEvent.Type.MATCHED)
                 .pairId(pairId)
                 .partnerInterests(List.copyOf(a.getInterests()))
                 .sharedInterests(List.copyOf(shared))
                 .icebreaker(icebreaker)
-                .initiator(false));
+                .initiator(false)
+                .partnerVideoEnabled(a.isVideoEnabled()));
 
         log.debug("Matched {} <-> {} (shared={})", a.getAnonId(), b.getAnonId(), shared);
     }

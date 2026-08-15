@@ -2,7 +2,6 @@ package com.quikko.service.store;
 
 import com.quikko.model.ChatUser;
 import com.quikko.model.MatchPair;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -11,12 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Default, zero-setup queue store. Good enough for a single-instance deployment or local development;
- * state is lost on restart and does not fan out across multiple app instances (use the redis profile for that).
- */
 @Component
-@ConditionalOnProperty(prefix = "quikko.matching", name = "queue-store", havingValue = "memory", matchIfMissing = true)
 public class InMemoryMatchQueueStore implements MatchQueueStore {
 
     private final Map<String, ChatUser> waiting = new ConcurrentHashMap<>();

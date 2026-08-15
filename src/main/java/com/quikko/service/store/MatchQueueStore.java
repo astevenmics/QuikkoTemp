@@ -8,7 +8,6 @@ import java.util.Optional;
 
 /**
  * Backing store for the waiting queue and active pairings.
- * Two implementations exist: an in-memory one (zero setup, default for local dev) and a Redis-backed one (for multi-instance / production use), selected via {@code quikko.matching.queue-store}.
  */
 public interface MatchQueueStore {
 

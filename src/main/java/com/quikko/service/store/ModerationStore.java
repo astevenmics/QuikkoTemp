@@ -4,7 +4,6 @@ import java.time.Duration;
 
 /**
  * Backing store for moderation state: per-IP report counters, the temporary IP ban list, and the sliding-window join-rate counters.
- * Same memory/redis split as {@link MatchQueueStore}.
  */
 public interface ModerationStore {
 

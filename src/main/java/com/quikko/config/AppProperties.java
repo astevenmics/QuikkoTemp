@@ -45,17 +45,8 @@ public class AppProperties {
     }
 
     public static class Matching {
-        private String queueStore = "memory";
         private int fallbackAfterSeconds = 7;
         private long pollIntervalMs = 1000;
-
-        public String getQueueStore() {
-            return queueStore;
-        }
-
-        public void setQueueStore(String queueStore) {
-            this.queueStore = queueStore;
-        }
 
         public int getFallbackAfterSeconds() {
             return fallbackAfterSeconds;
