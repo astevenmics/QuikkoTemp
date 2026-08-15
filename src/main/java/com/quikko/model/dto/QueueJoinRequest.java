@@ -6,6 +6,7 @@ public class QueueJoinRequest {
 
     private String anonId;
     private List<String> interests;
+    private Boolean videoEnabled;
 
     public String getAnonId() {
         return anonId;
@@ -21,5 +22,13 @@ public class QueueJoinRequest {
 
     public void setInterests(List<String> interests) {
         this.interests = interests;
+    }
+
+    public Boolean getVideoEnabled() {
+        return videoEnabled;
+    }
+
+    public void setVideoEnabled(Boolean videoEnabled) {
+        this.videoEnabled = videoEnabled;
     }
 }

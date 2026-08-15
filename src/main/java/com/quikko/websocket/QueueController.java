@@ -57,7 +57,8 @@ public class QueueController {
         }
 
         Set<String> interests = req.getInterests() == null ? Set.of() : new LinkedHashSet<>(req.getInterests());
-        matchingService.joinQueue(req.getAnonId(), sessionId, interests, ip);
+        boolean videoEnabled = req.getVideoEnabled() == null || req.getVideoEnabled();
+        matchingService.joinQueue(req.getAnonId(), sessionId, interests, ip, videoEnabled);
     }
 
     @MessageMapping("/queue.leave")

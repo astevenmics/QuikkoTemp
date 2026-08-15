@@ -14,6 +14,11 @@
     <div id="statusPill" class="status-pill status-idle">Connecting…</div>
 </header>
 
+<div class="ad-slot ad-strip" aria-hidden="true">
+    <span class="ad-label">Ad</span>
+    <span class="ad-placeholder">Advertisement space</span>
+</div>
+
 <div id="icebreakerBanner" class="icebreaker-banner" hidden>
     <span id="icebreakerText"></span>
 </div>
@@ -22,7 +27,7 @@
     <section class="video-pane">
         <div class="video-wrap remote-wrap">
             <video id="remoteVideo" autoplay playsinline></video>
-            <div id="remoteOverlay" class="video-overlay">Waiting for a stranger…</div>
+            <div id="remoteOverlay" class="video-overlay">Searching for another match…</div>
         </div>
         <div class="video-wrap local-wrap">
             <video id="localVideo" autoplay playsinline muted></video>
@@ -42,14 +47,16 @@
     <button id="skipBtn" class="btn btn-accent" type="button">⏭ Skip</button>
     <button id="stopBtn" class="btn btn-ghost" type="button">⏹ Stop</button>
     <button id="reportBtn" class="btn btn-danger" type="button">🚩 Report</button>
-    <label class="mode-toggle small">
-        <input type="checkbox" id="camToggle" checked>
-        <span>Cam</span>
-    </label>
-    <label class="mode-toggle small">
-        <input type="checkbox" id="micToggle" checked>
-        <span>Mic</span>
-    </label>
+    <div class="cam-mic-toggles">
+        <label class="mode-toggle small">
+            <input type="checkbox" id="camToggle" checked>
+            <span>Cam</span>
+        </label>
+        <label class="mode-toggle small">
+            <input type="checkbox" id="micToggle" checked>
+            <span>Mic</span>
+        </label>
+    </div>
 </footer>
 
 <div id="capsuleModal" class="modal-overlay" hidden>

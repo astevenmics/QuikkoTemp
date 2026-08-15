@@ -7,6 +7,8 @@
     const myInterests = JSON.parse(sessionStorage.getItem('quikko_interests') || '[]');
     const videoEnabled = sessionStorage.getItem('quikko_video_enabled') !== '0';
 
+    const SEARCHING_TEXT = 'Searching for another match…';
+
     const statusPill = document.getElementById('statusPill');
     const icebreakerBanner = document.getElementById('icebreakerBanner');
     const icebreakerText = document.getElementById('icebreakerText');
@@ -41,6 +43,10 @@
     let capsulePairIdForModal = null;
     let capsuleResolve = null;
 
+    if (!videoEnabled) {
+        document.body.classList.add('text-only');
+    }
+
     function setStatus(kind, text) {
         statusPill.textContent = text;
         statusPill.className = 'status-pill status-' + kind;
@@ -56,6 +62,14 @@
 
     function resetChatLog() {
         chatLog.innerHTML = '';
+    }
+
+    function setSearchingOverlay() {
+        if (!videoEnabled) return;
+        remoteOverlay.hidden = false;
+        remoteOverlay.classList.add('searching');
+        remoteOverlay.innerHTML = '<span class="radar"><span class="radar-ring"></span><span class="radar-ring"></span><span class="radar-dot"></span></span>' +
+            '<span class="searching-label">' + SEARCHING_TEXT + '</span>';
     }
 
     // ---------- media ----------
@@ -88,9 +102,12 @@
             pc = null;
         }
         pendingCandidates = [];
-        remoteVideo.srcObject = null;
-        remoteOverlay.hidden = false;
-        remoteOverlay.textContent = 'Waiting for a stranger…';
+        if (videoEnabled) {
+            remoteVideo.srcObject = null;
+            remoteOverlay.classList.remove('searching');
+            remoteOverlay.textContent = SEARCHING_TEXT;
+            remoteOverlay.hidden = false;
+        }
     }
 
     async function setupPeerConnection() {
@@ -102,6 +119,7 @@
 
         pc.ontrack = (event) => {
             remoteVideo.srcObject = event.streams[0];
+            remoteOverlay.classList.remove('searching');
             remoteOverlay.hidden = true;
         };
 
@@ -113,6 +131,7 @@
 
         pc.onconnectionstatechange = () => {
             if (pc && (pc.connectionState === 'failed' || pc.connectionState === 'disconnected')) {
+                remoteOverlay.classList.remove('searching');
                 remoteOverlay.hidden = false;
                 remoteOverlay.textContent = 'Connection lost…';
             }
@@ -165,11 +184,10 @@
     }
 
     function joinQueue() {
-        setStatus('waiting', 'Searching for a stranger…');
-        remoteOverlay.hidden = false;
-        remoteOverlay.textContent = 'Searching for a stranger…';
+        setStatus('waiting', SEARCHING_TEXT);
+        setSearchingOverlay();
         icebreakerBanner.hidden = true;
-        send('/app/queue.join', { anonId, interests: myInterests });
+        send('/app/queue.join', { anonId, interests: myInterests, videoEnabled });
     }
 
     function connect() {
@@ -189,7 +207,7 @@
     function onServerEvent(event) {
         switch (event.type) {
             case 'WAITING':
-                setStatus('waiting', 'Searching for a stranger…');
+                setStatus('waiting', SEARCHING_TEXT);
                 break;
             case 'MATCHED':
                 onMatched(event);
@@ -226,6 +244,7 @@
     }
 
     function onMatched(event) {
+        resetSkipButton();
         currentPairId = event.pairId;
         isInitiator = !!event.initiator;
         setStatus('matched', 'Connected');
@@ -237,31 +256,61 @@
         } else {
             icebreakerBanner.hidden = true;
         }
-        setupPeerConnection();
+        if (videoEnabled) {
+            if (event.partnerVideoEnabled === false) {
+                remoteOverlay.classList.remove('searching');
+                remoteOverlay.hidden = false;
+                remoteOverlay.textContent = '💬 This stranger is chatting via text only';
+            } else {
+                setupPeerConnection();
+            }
+        }
     }
 
     function onMatchEndedByOther(message) {
         if (!currentPairId) return;
+        resetSkipButton();
         appendMessage(message, 'system');
         const pairId = currentPairId;
         currentPairId = null;
         teardownPeerConnection();
-        setStatus('waiting', 'Searching for a stranger…');
+        setStatus('waiting', SEARCHING_TEXT);
         promptCapsule(pairId).then(() => joinQueue());
     }
 
     // ---------- buttons ----------
-    skipBtn.addEventListener('click', () => {
-        if (!currentPairId) return;
+    let skipConfirmTimeout = null;
+
+    function resetSkipButton() {
+        clearTimeout(skipConfirmTimeout);
+        skipConfirmTimeout = null;
+        skipBtn.classList.remove('btn-confirm');
+        skipBtn.textContent = '⏭ Skip';
+    }
+
+    function doSkip() {
         const pairId = currentPairId;
         send('/app/match.skip', { anonId, pairId });
         currentPairId = null;
         teardownPeerConnection();
         appendMessage('You skipped. Finding someone new…', 'system');
         promptCapsule(pairId).then(() => joinQueue());
+    }
+
+    skipBtn.addEventListener('click', () => {
+        if (!currentPairId) return;
+        if (skipConfirmTimeout) {
+            resetSkipButton();
+            doSkip();
+            return;
+        }
+        skipBtn.classList.add('btn-confirm');
+        skipBtn.textContent = 'Sure? Click again';
+        skipConfirmTimeout = setTimeout(resetSkipButton, 3000);
     });
 
     stopBtn.addEventListener('click', () => {
+        resetSkipButton();
         const pairId = currentPairId;
         send('/app/queue.leave', { anonId, pairId });
         currentPairId = null;
@@ -272,6 +321,7 @@
 
     reportBtn.addEventListener('click', () => {
         if (!currentPairId) return;
+        resetSkipButton();
         const pairId = currentPairId;
         send('/app/report', { anonId, pairId });
         currentPairId = null;
@@ -345,15 +395,22 @@
     });
 
     // ---------- boot ----------
-    fetch('/api/webrtc/ice-servers')
-        .then((r) => r.json())
-        .then((data) => {
-            if (data.iceServers && data.iceServers.length) iceServers = data.iceServers;
-        })
-        .catch(() => {})
-        .finally(() => {
-            ensureLocalMedia().then(connect);
-        });
+    function boot() {
+        if (videoEnabled) {
+            fetch('/api/webrtc/ice-servers')
+                .then((r) => r.json())
+                .then((data) => {
+                    if (data.iceServers && data.iceServers.length) iceServers = data.iceServers;
+                })
+                .catch(() => {})
+                .finally(() => {
+                    ensureLocalMedia().then(connect);
+                });
+        } else {
+            connect();
+        }
+    }
+    boot();
 
     window.addEventListener('beforeunload', () => {
         send('/app/queue.leave', { anonId, pairId: currentPairId });

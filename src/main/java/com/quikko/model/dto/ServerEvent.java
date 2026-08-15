@@ -31,6 +31,7 @@ public class ServerEvent {
     private List<String> sharedInterests;
     private List<String> partnerInterests;
     private Boolean initiator;
+    private Boolean partnerVideoEnabled;
     private String token;
     private String message;
 
@@ -80,6 +81,11 @@ public class ServerEvent {
         return this;
     }
 
+    public ServerEvent partnerVideoEnabled(Boolean partnerVideoEnabled) {
+        this.partnerVideoEnabled = partnerVideoEnabled;
+        return this;
+    }
+
     public ServerEvent token(String token) {
         this.token = token;
         return this;
@@ -124,6 +130,10 @@ public class ServerEvent {
 
     public Boolean getInitiator() {
         return initiator;
+    }
+
+    public Boolean getPartnerVideoEnabled() {
+        return partnerVideoEnabled;
     }
 
     public String getToken() {

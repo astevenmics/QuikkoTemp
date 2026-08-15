@@ -3,7 +3,8 @@
     const customInterestInput = document.getElementById('customInterest');
     const addInterestBtn = document.getElementById('addInterestBtn');
     const startBtn = document.getElementById('startBtn');
-    const videoToggle = document.getElementById('videoToggle');
+    const modeVideoBtn = document.getElementById('modeVideoBtn');
+    const modeTextBtn = document.getElementById('modeTextBtn');
 
     const ageGateModal = document.getElementById('ageGateModal');
     const acceptAgeBtn = document.getElementById('acceptAge');
@@ -14,6 +15,7 @@
     const closeTerms = document.getElementById('closeTerms');
 
     const selected = new Set();
+    let videoEnabled = true;
 
     function anonId() {
         let id = sessionStorage.getItem('quikko_anon_id');
@@ -87,9 +89,20 @@
         goToChat();
     });
 
+    // ---------- chat mode (video & text vs. text only) ----------
+    function setMode(enableVideo) {
+        videoEnabled = enableVideo;
+        modeVideoBtn.classList.toggle('selected', enableVideo);
+        modeVideoBtn.setAttribute('aria-checked', String(enableVideo));
+        modeTextBtn.classList.toggle('selected', !enableVideo);
+        modeTextBtn.setAttribute('aria-checked', String(!enableVideo));
+    }
+    modeVideoBtn.addEventListener('click', () => setMode(true));
+    modeTextBtn.addEventListener('click', () => setMode(false));
+
     startBtn.addEventListener('click', () => {
         sessionStorage.setItem('quikko_interests', JSON.stringify(Array.from(selected)));
-        sessionStorage.setItem('quikko_video_enabled', videoToggle.checked ? '1' : '0');
+        sessionStorage.setItem('quikko_video_enabled', videoEnabled ? '1' : '0');
         if (sessionStorage.getItem('quikko_age_confirmed') === '1') {
             goToChat();
         } else {

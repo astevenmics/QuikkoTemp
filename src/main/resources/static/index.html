@@ -17,6 +17,11 @@
         <p class="tagline">Meet someone new, right now. No sign-up, no strings.</p>
     </header>
 
+    <div class="ad-slot ad-leaderboard" aria-hidden="true">
+        <span class="ad-label">Advertisement</span>
+        <span class="ad-placeholder">728 × 90 ad space</span>
+    </div>
+
     <section class="card start-card">
         <h2>Pick a few interests <span class="muted">(optional)</span></h2>
         <p class="hint">We'll try to match you with a stranger who's into the same stuff first.</p>
@@ -29,10 +34,19 @@
         </div>
 
         <div class="mode-row">
-            <label class="mode-toggle">
-                <input type="checkbox" id="videoToggle" checked>
-                <span>Enable camera &amp; mic for video chat</span>
-            </label>
+            <p class="mode-label">How do you want to chat?</p>
+            <div id="modeSwitch" class="mode-switch" role="radiogroup" aria-label="Chat mode">
+                <button type="button" id="modeVideoBtn" class="mode-option selected" role="radio" aria-checked="true">
+                    <span class="mode-icon">🎥</span>
+                    <span class="mode-text">Video &amp; Text</span>
+                    <span class="mode-sub">Camera + mic + chat</span>
+                </button>
+                <button type="button" id="modeTextBtn" class="mode-option" role="radio" aria-checked="false">
+                    <span class="mode-icon">💬</span>
+                    <span class="mode-text">Text Only</span>
+                    <span class="mode-sub">No camera, no mic</span>
+                </button>
+            </div>
         </div>
 
         <button id="startBtn" class="btn btn-primary btn-lg" type="button">🚀 Start chatting</button>
@@ -61,9 +75,19 @@
         </div>
     </section>
 
+    <div class="ad-slot ad-rectangle" aria-hidden="true">
+        <span class="ad-label">Advertisement</span>
+        <span class="ad-placeholder">300 × 250 ad space</span>
+    </div>
+
     <footer class="site-footer">
         <span>quikko.xyz</span> · <a href="/capsule">Claim a Time Capsule</a>
     </footer>
+
+    <div class="ad-slot ad-leaderboard" aria-hidden="true">
+        <span class="ad-label">Advertisement</span>
+        <span class="ad-placeholder">728 × 90 ad space</span>
+    </div>
 </main>
 
 <div id="ageGateModal" class="modal-overlay" hidden>
