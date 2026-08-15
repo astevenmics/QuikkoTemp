@@ -21,8 +21,7 @@ public class ServerEvent {
         CAPSULE_SAVED,
         ERROR,
         BANNED,
-        RATE_LIMITED,
-        CAPTCHA_FAILED
+        RATE_LIMITED
     }
 
     private Type type;

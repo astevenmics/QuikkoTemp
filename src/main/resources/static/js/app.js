@@ -3,7 +3,8 @@
   const customInterestInput = document.getElementById('customInterest');
   const addInterestBtn = document.getElementById('addInterestBtn');
   const startBtn = document.getElementById('startBtn');
-  const videoToggle = document.getElementById('videoToggle');
+  const modeVideoBtn = document.getElementById('modeVideoBtn');
+  const modeTextBtn = document.getElementById('modeTextBtn');
 
   const ageGateModal = document.getElementById('ageGateModal');
   const acceptAgeBtn = document.getElementById('acceptAge');
@@ -13,15 +14,8 @@
   const openTermsInline = document.getElementById('openTermsInline');
   const closeTerms = document.getElementById('closeTerms');
 
-  const captchaRow = document.querySelector('.captcha-row');
-  const captchaQuestion = document.getElementById('captchaQuestion');
-  const captchaAnswer = document.getElementById('captchaAnswer');
-  const captchaRefresh = document.getElementById('captchaRefresh');
-  const captchaStatus = document.getElementById('captchaStatus');
-
   const selected = new Set();
-  let captchaEnabled = true;
-  let captchaChallengeId = null;
+  let videoEnabled = true;
 
   function anonId() {
     let id = sessionStorage.getItem('quikko_anon_id');
@@ -95,82 +89,25 @@
     goToChat();
   });
 
-  // ---------- bot-check (CAPTCHA) ----------
-  function loadNewCaptcha() {
-    captchaAnswer.value = '';
-    captchaStatus.hidden = true;
-    captchaQuestion.textContent = 'Loading check…';
-    fetch('/api/captcha/new')
-      .then((r) => r.json())
-      .then((data) => {
-        captchaEnabled = data.enabled !== false;
-        if (!captchaEnabled) {
-          captchaRow.hidden = true;
-          return;
-        }
-        captchaRow.hidden = false;
-        captchaChallengeId = data.challengeId;
-        captchaQuestion.textContent = data.question;
-      })
-      .catch(() => {
-        captchaQuestion.textContent = 'Verification unavailable — try again shortly.';
-      });
+  // ---------- chat mode (video & text vs. text only) ----------
+  function setMode(enableVideo) {
+    videoEnabled = enableVideo;
+    modeVideoBtn.classList.toggle('selected', enableVideo);
+    modeVideoBtn.setAttribute('aria-checked', String(enableVideo));
+    modeTextBtn.classList.toggle('selected', !enableVideo);
+    modeTextBtn.setAttribute('aria-checked', String(!enableVideo));
   }
-  loadNewCaptcha();
-  captchaRefresh.addEventListener('click', loadNewCaptcha);
-
-  function showCaptchaError(msg) {
-    captchaStatus.textContent = msg;
-    captchaStatus.hidden = false;
-    captchaRow.classList.remove('shake');
-    // restart the CSS animation
-    void captchaRow.offsetWidth;
-    captchaRow.classList.add('shake');
-  }
-
-  function verifyCaptcha() {
-    if (!captchaEnabled) {
-      return Promise.resolve(true);
-    }
-    return fetch('/api/captcha/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ challengeId: captchaChallengeId, answer: captchaAnswer.value }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.valid) {
-          sessionStorage.setItem('quikko_captcha_id', captchaChallengeId);
-          return true;
-        }
-        showCaptchaError("That's not quite right — try the new question.");
-        loadNewCaptcha();
-        return false;
-      })
-      .catch(() => {
-        showCaptchaError("Couldn't verify right now — please try again.");
-        return false;
-      });
-  }
+  modeVideoBtn.addEventListener('click', () => setMode(true));
+  modeTextBtn.addEventListener('click', () => setMode(false));
 
   startBtn.addEventListener('click', () => {
-    startBtn.disabled = true;
-    const originalLabel = startBtn.textContent;
-    startBtn.textContent = 'Checking…';
-
-    verifyCaptcha().then((ok) => {
-      startBtn.disabled = false;
-      startBtn.textContent = originalLabel;
-      if (!ok) return;
-
-      sessionStorage.setItem('quikko_interests', JSON.stringify(Array.from(selected)));
-      sessionStorage.setItem('quikko_video_enabled', videoToggle.checked ? '1' : '0');
-      if (sessionStorage.getItem('quikko_age_confirmed') === '1') {
-        goToChat();
-      } else {
-        showModal(ageGateModal);
-      }
-    });
+    sessionStorage.setItem('quikko_interests', JSON.stringify(Array.from(selected)));
+    sessionStorage.setItem('quikko_video_enabled', videoEnabled ? '1' : '0');
+    if (sessionStorage.getItem('quikko_age_confirmed') === '1') {
+      goToChat();
+    } else {
+      showModal(ageGateModal);
+    }
   });
 
   function goToChat() {

@@ -6,7 +6,6 @@
   }
   const myInterests = JSON.parse(sessionStorage.getItem('quikko_interests') || '[]');
   const videoEnabled = sessionStorage.getItem('quikko_video_enabled') !== '0';
-  const captchaId = sessionStorage.getItem('quikko_captcha_id') || null;
 
   const SEARCHING_TEXT = 'Searching for another match…';
 
@@ -191,7 +190,7 @@
     setStatus('waiting', SEARCHING_TEXT);
     setSearchingOverlay();
     icebreakerBanner.hidden = true;
-    send('/app/queue.join', { anonId, interests: myInterests, videoEnabled, captchaId });
+    send('/app/queue.join', { anonId, interests: myInterests, videoEnabled });
   }
 
   function connect() {
@@ -240,12 +239,6 @@
         break;
       case 'RATE_LIMITED':
         appendMessage(event.message || 'Slow down a little.', 'system');
-        break;
-      case 'CAPTCHA_FAILED':
-        setStatus('ended', 'Verification needed');
-        appendMessage(event.message || 'Please verify you\'re human again.', 'system');
-        sessionStorage.removeItem('quikko_captcha_id');
-        setTimeout(() => (window.location.href = '/'), 2200);
         break;
       case 'ERROR':
         appendMessage(event.message || 'Something went wrong.', 'system');

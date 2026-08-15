@@ -6,7 +6,6 @@ public class QueueJoinRequest {
 
     private String anonId;
     private List<String> interests;
-    private String captchaId;
     private Boolean videoEnabled;
 
     public String getAnonId() {
@@ -23,14 +22,6 @@ public class QueueJoinRequest {
 
     public void setInterests(List<String> interests) {
         this.interests = interests;
-    }
-
-    public String getCaptchaId() {
-        return captchaId;
-    }
-
-    public void setCaptchaId(String captchaId) {
-        this.captchaId = captchaId;
     }
 
     public Boolean getVideoEnabled() {

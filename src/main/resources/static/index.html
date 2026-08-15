@@ -34,21 +34,20 @@
     </div>
 
     <div class="mode-row">
-      <label class="mode-toggle">
-        <input type="checkbox" id="videoToggle" checked>
-        <span>Enable camera &amp; mic for video chat</span>
-      </label>
-    </div>
-
-    <div class="captcha-row">
-      <div class="captcha-question">
-        <span>🤖</span>
-        <span id="captchaQuestion">Loading check…</span>
+      <p class="mode-label">How do you want to chat?</p>
+      <div id="modeSwitch" class="mode-switch" role="radiogroup" aria-label="Chat mode">
+        <button type="button" id="modeVideoBtn" class="mode-option selected" role="radio" aria-checked="true">
+          <span class="mode-icon">🎥</span>
+          <span class="mode-text">Video &amp; Text</span>
+          <span class="mode-sub">Camera + mic + chat</span>
+        </button>
+        <button type="button" id="modeTextBtn" class="mode-option" role="radio" aria-checked="false">
+          <span class="mode-icon">💬</span>
+          <span class="mode-text">Text Only</span>
+          <span class="mode-sub">No camera, no mic</span>
+        </button>
       </div>
-      <input id="captchaAnswer" type="text" inputmode="numeric" maxlength="4" placeholder="Answer">
-      <button id="captchaRefresh" class="btn btn-ghost btn-icon" type="button" title="New question">↻</button>
     </div>
-    <p id="captchaStatus" class="captcha-status" hidden></p>
 
     <button id="startBtn" class="btn btn-primary btn-lg" type="button">🚀 Start chatting</button>
 
