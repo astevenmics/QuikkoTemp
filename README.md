@@ -31,7 +31,7 @@ delayed-reveal note for the person they just talked to ("Time Capsule").
 | Backend               | Java 21, Spring Boot 3.3, Maven |
 | Realtime signaling    | Spring WebSocket + STOMP (SockJS fallback) |
 | Video                 | WebRTC (browser-native), STUN + optional TURN |
-| Matching queue / bans | Pluggable: in-memory (default) or Redis |
+| Matching queue / bans | In-memory (single-instance) |
 | Time Capsule storage  | Spring Data JPA — H2 (default) or MySQL |
 | Scheduling            | Spring `@Scheduled` |
 | Frontend              | Plain HTML/CSS/JS, no framework |
@@ -59,23 +59,21 @@ src/main/java/com/quikko/
     RateLimiterService          Join-rate limiting
     ReportService                Report counters + IP bans
     CapsuleService               Time Capsule leave/claim logic (double opt-in)
-    store/                       MatchQueueStore & ModerationStore, each with
-                                  in-memory (default) and Redis implementations
+    store/                       MatchQueueStore & ModerationStore (in-memory)
   model/                        ChatUser, MatchPair, Capsule (JPA entity), dto/*
   repository/                  CapsuleRepository (Spring Data JPA)
   scheduler/                   CapsuleScheduler (daily unlock sweep)
 
 src/main/resources/
   application.properties           Default config (see below)
-  application-redis.properties     Redis profile overrides
   application-mysql.properties      MySQL profile overrides
   static/                          index.html, chat.html, capsule.html, css/, js/
 ```
 
 ## Running locally (zero setup)
 
-Requires JDK 21 and Maven. No Redis, no MySQL, no `.env` file needed — the default
-profile uses an in-memory H2 database and an in-memory matching queue.
+Requires JDK 21 and Maven. No MySQL, no `.env` file needed — the default profile uses
+an in-memory H2 database and an in-memory matching queue.
 
 ```bash
 mvn spring-boot:run
@@ -108,7 +106,6 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 
 | Property | Default | Purpose |
 |---|---|---|
-| `quikko.matching.queue-store` | `memory` | `memory` or `redis` — the single switch that controls everything Redis-related: which `MatchQueueStore`/`ModerationStore` bean is active *and* whether the Redis connection beans (`RedisConfig`) get created at all. Setting this alone is sufficient — no separate profile required (see below) |
 | `quikko.matching.fallback-after-seconds` | `7` | How long to hold out for an interest-overlap match before pairing with anyone |
 | `quikko.matching.poll-interval-ms` | `1000` | How often the matchmaking scheduler runs |
 | `quikko.moderation.report-ban-threshold` | `5` | Reports against an IP before it's temporarily banned |
@@ -127,34 +124,23 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 |---|---|
 | `PORT` | HTTP port (default 8080) |
 | `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL` | TURN server for WebRTC relay in production |
-| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis connection (only read when `quikko.matching.queue-store=redis`) |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | MySQL connection (only read when the `mysql` profile is active; `DB_PORT` defaults to `3306`) |
 
-### Switching to Redis and/or MySQL
+### Switching to MySQL
 
-The `mysql` and `redis` Spring profiles are convenience bundles — each just sets the
-relevant `quikko.*`/`spring.datasource.*` properties together with sensible env-var
-defaults. They can be combined, or you can set the underlying properties directly
-without activating a profile at all (e.g. `QUIKKO_MATCHING_QUEUE_STORE=redis` plus
-`SPRING_DATA_REDIS_HOST=...`) — either way works identically.
+The `mysql` Spring profile is a convenience bundle that sets the relevant
+`spring.datasource.*` properties together with sensible env-var defaults.
 
 ```bash
-# Redis-backed matching queue/bans, still using H2 for capsules
-SPRING_PROFILES_ACTIVE=redis mvn spring-boot:run
-
 # MySQL for Time Capsules, still using the in-memory queue
-SPRING_PROFILES_ACTIVE=mysql mvn spring-boot:run
-
-# Both, production-style
-SPRING_PROFILES_ACTIVE=mysql,redis \
-REDIS_HOST=redis.internal DB_HOST=db.internal DB_USERNAME=quikko DB_PASSWORD=secret \
+SPRING_PROFILES_ACTIVE=mysql \
+DB_HOST=db.internal DB_USERNAME=quikko DB_PASSWORD=secret \
 mvn spring-boot:run
 ```
 
-Run a local Redis/MySQL for testing this with Docker:
+Run a local MySQL for testing this with Docker:
 
 ```bash
-docker run -p 6379:6379 redis:7
 docker run -p 3306:3306 -e MYSQL_DATABASE=quikko -e MYSQL_USER=quikko -e MYSQL_PASSWORD=quikko -e MYSQL_ROOT_PASSWORD=root mysql:8
 ```
 
@@ -169,10 +155,10 @@ docker run -p 3306:3306 -e MYSQL_DATABASE=quikko -e MYSQL_USER=quikko -e MYSQL_P
   TURN server (e.g. [coturn](https://github.com/coturn/coturn)) and set `TURN_URL`,
   `TURN_USERNAME`, `TURN_CREDENTIAL` (short-lived/HMAC credentials recommended over
   static ones).
-- **Use Redis in any multi-instance deployment.** The in-memory queue store only works
-  correctly with a single app instance — matching, IP bans, and rate limits are all
-  process-local otherwise. Activate the `redis` profile once you run more than one
-  instance or need state to survive a restart.
+- **Single instance only.** The matching queue, IP bans, and rate limits are all
+  in-memory and process-local — running more than one app instance behind a load
+  balancer will split traffic across independent, unsynchronized queues. Keep Quikko
+  to a single instance (vertically scale it) unless you reintroduce a shared store.
 - **Use MySQL, not H2, in production** — H2 here runs in `mem` mode and loses all
   Time Capsules on restart. Activate the `mysql` profile.
 - **WebSocket-aware load balancing.** If you run multiple instances behind a load

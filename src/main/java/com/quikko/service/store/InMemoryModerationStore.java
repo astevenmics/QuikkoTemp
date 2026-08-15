@@ -1,6 +1,5 @@
 package com.quikko.service.store;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-@ConditionalOnProperty(prefix = "quikko.matching", name = "queue-store", havingValue = "memory", matchIfMissing = true)
 public class InMemoryModerationStore implements ModerationStore {
 
     private final ConcurrentHashMap<String, AtomicInteger> reportCounts = new ConcurrentHashMap<>();
