@@ -43,6 +43,28 @@
     let capsulePairIdForModal = null;
     let capsuleResolve = null;
 
+    let matchStartTime = null;
+    let messageCount = 0;
+
+    // Time Capsule is only offered after an actual conversation — 100+ messages for text-only, 10+ minutes for video — not after every few-second skip.
+    const CAPSULE_MESSAGE_THRESHOLD = 100;
+    const CAPSULE_MINUTES_THRESHOLD = 10;
+
+    function capsuleEligible() {
+        if (!matchStartTime) return false;
+        if (videoEnabled) {
+            return (Date.now() - matchStartTime) >= CAPSULE_MINUTES_THRESHOLD * 60 * 1000;
+        }
+        return messageCount >= CAPSULE_MESSAGE_THRESHOLD;
+    }
+
+    function maybePromptCapsule(pairId) {
+        if (pairId && capsuleEligible()) {
+            return promptCapsule(pairId);
+        }
+        return Promise.resolve();
+    }
+
     if (!videoEnabled) {
         document.body.classList.add('text-only');
     }
@@ -214,6 +236,7 @@
                 break;
             case 'CHAT':
                 appendMessage(event.text, 'them');
+                messageCount++;
                 break;
             case 'SIGNAL':
                 handleSignal(event.signalType, event.payload);
@@ -247,6 +270,8 @@
         resetSkipButton();
         currentPairId = event.pairId;
         isInitiator = !!event.initiator;
+        matchStartTime = Date.now();
+        messageCount = 0;
         setStatus('matched', 'Connected');
         resetChatLog();
         appendMessage("You're connected with a stranger. Say hi!", 'system');
@@ -275,7 +300,7 @@
         currentPairId = null;
         teardownPeerConnection();
         setStatus('waiting', SEARCHING_TEXT);
-        promptCapsule(pairId).then(() => joinQueue());
+        maybePromptCapsule(pairId).then(() => joinQueue());
     }
 
     // ---------- buttons ----------
@@ -294,7 +319,7 @@
         currentPairId = null;
         teardownPeerConnection();
         appendMessage('You skipped. Finding someone new…', 'system');
-        promptCapsule(pairId).then(() => joinQueue());
+        maybePromptCapsule(pairId).then(() => joinQueue());
     }
 
     skipBtn.addEventListener('click', () => {
@@ -315,8 +340,7 @@
         send('/app/queue.leave', { anonId, pairId });
         currentPairId = null;
         teardownPeerConnection();
-        const after = pairId ? promptCapsule(pairId) : Promise.resolve();
-        after.then(() => (window.location.href = '/'));
+        maybePromptCapsule(pairId).then(() => (window.location.href = '/'));
     });
 
     reportBtn.addEventListener('click', () => {
@@ -336,6 +360,7 @@
         if (!text || !currentPairId) return;
         send('/app/chat.send', { anonId, pairId: currentPairId, text });
         appendMessage(text, 'me');
+        messageCount++;
         chatInput.value = '';
     });
 
