@@ -244,7 +244,7 @@ button { font-family: inherit; }
 .ad-placeholder { font-size: 0.8rem; }
 .ad-leaderboard { max-width: 728px; min-height: 90px; }
 .ad-rectangle { max-width: 300px; min-height: 250px; }
-.ad-strip { min-height: 44px; margin: 0; border-radius: 0; border-width: 0 0 2px; }
+.ad-strip { min-height: 90px; margin: 0; border-radius: 0; border-width: 0 0 2px; }
 
 .features {
   display: grid;
@@ -538,10 +538,18 @@ button { font-family: inherit; }
 body.text-only .video-pane { display: none; }
 body.text-only .cam-mic-toggles { display: none; }
 
-/* Ad slots flank the center column in both modes. */
+/* Ad slots flank the center column in both modes, each side split into a
+   top and bottom half rather than one tall skyscraper. */
+.side-ad-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 100%;
+}
 .side-ad {
   display: flex;
-  min-height: 100%;
+  flex: 1 1 0;
+  min-height: 0;
   margin: 0;
 }
 
@@ -587,7 +595,7 @@ body.text-only .cam-mic-toggles { display: none; }
   /* No room for side ads on small screens — let main-column (which stacks
      video-on-top/chat-below internally via flex) use the full width. */
   .chat-layout { grid-template-columns: 1fr !important; }
-  .side-ad { display: none !important; }
+  .side-ad-column { display: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
