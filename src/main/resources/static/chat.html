@@ -29,27 +29,29 @@
     <span class="ad-placeholder">Ad space</span>
   </div>
 
-  <section class="video-pane">
-    <div class="video-wrap remote-wrap">
-      <video id="remoteVideo" autoplay playsinline></video>
-      <div id="remoteOverlay" class="video-overlay">Searching for another match…</div>
-    </div>
-    <div class="video-wrap local-wrap">
-      <video id="localVideo" autoplay playsinline muted></video>
-    </div>
-  </section>
+  <div class="main-column">
+    <section class="video-pane">
+      <div class="video-wrap remote-wrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div id="remoteOverlay" class="video-overlay">Searching for another match…</div>
+      </div>
+      <div class="video-wrap local-wrap">
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
+    </section>
 
-  <section class="chat-pane">
-    <div id="searchingIndicator" class="searching-indicator" hidden>
-      <span class="searching-dots"><span></span><span></span><span></span></span>
-      <span class="searching-indicator-text">Searching for another match…</span>
-    </div>
-    <div id="chatLog" class="chat-log" aria-live="polite"></div>
-    <form id="chatForm" class="chat-input-row">
-      <input id="chatInput" type="text" maxlength="1000" placeholder="Say hi…" autocomplete="off">
-      <button type="submit" class="btn btn-primary">Send</button>
-    </form>
-  </section>
+    <section class="chat-pane">
+      <div id="searchingIndicator" class="searching-indicator" hidden>
+        <span class="searching-dots"><span></span><span></span><span></span></span>
+        <span class="searching-indicator-text">Searching for another match…</span>
+      </div>
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+      <form id="chatForm" class="chat-input-row">
+        <input id="chatInput" type="text" maxlength="1000" placeholder="Say hi…" autocomplete="off">
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+    </section>
+  </div>
 
   <div class="side-ad ad-slot" aria-hidden="true">
     <span class="ad-label">Ad</span>

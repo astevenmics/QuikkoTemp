@@ -348,10 +348,19 @@ button { font-family: inherit; }
 .chat-layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: minmax(120px, 220px) minmax(320px, 900px) minmax(120px, 220px);
+  justify-content: center;
   gap: 0.75rem;
   padding: 0.75rem;
   min-height: 0;
+}
+
+.main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  min-width: 0;
 }
 
 .video-pane {
@@ -359,6 +368,7 @@ button { font-family: inherit; }
   background: #111;
   border-radius: var(--radius);
   overflow: hidden;
+  flex: 0 0 55%;
   min-height: 0;
 }
 .video-wrap { position: absolute; inset: 0; }
@@ -435,7 +445,8 @@ button { font-family: inherit; }
   background: white;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 150px;
 }
 .chat-log {
   flex: 1;
@@ -519,22 +530,16 @@ button { font-family: inherit; }
 .cam-mic-toggles { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
 
 /* Text-only sessions never touch the camera/mic — it's a chat-only layout,
-   not a video call with the video hidden. */
+   not a video call with the video hidden. main-column then just shows the
+   chat pane, since video-pane is gone. */
 body.text-only .video-pane { display: none; }
 body.text-only .cam-mic-toggles { display: none; }
 
-/* Side ad slots only appear in text-only mode, flanking a slimmer,
-   centered chat pane instead of letting it stretch full width. */
-.side-ad { display: none; }
-body.text-only .side-ad {
+/* Ad slots flank the center column in both modes. */
+.side-ad {
   display: flex;
   min-height: 100%;
   margin: 0;
-}
-body.text-only .chat-layout {
-  grid-template-columns: minmax(120px, 220px) minmax(320px, 680px) minmax(120px, 220px) !important;
-  grid-template-rows: 1fr !important;
-  justify-content: center;
 }
 
 .capsule-token-box {
@@ -576,10 +581,10 @@ body.text-only .chat-layout {
 .claim-result.expired, .claim-result.notfound { background: #ffe8e8; }
 
 @media (max-width: 800px) {
-  .chat-layout { grid-template-columns: 1fr; grid-template-rows: 45vh 1fr; }
-  /* No room for side ads on small screens — let the chat pane use the width. */
+  /* No room for side ads on small screens — let main-column (which stacks
+     video-on-top/chat-below internally via flex) use the full width. */
+  .chat-layout { grid-template-columns: 1fr !important; }
   .side-ad { display: none !important; }
-  body.text-only .chat-layout { grid-template-columns: 1fr !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
