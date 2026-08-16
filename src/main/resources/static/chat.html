@@ -35,6 +35,10 @@
   </section>
 
   <section class="chat-pane">
+    <div id="searchingIndicator" class="searching-indicator" hidden>
+      <span class="searching-dots"><span></span><span></span><span></span></span>
+      <span class="searching-indicator-text">Searching for another match…</span>
+    </div>
     <div id="chatLog" class="chat-log" aria-live="polite"></div>
     <form id="chatForm" class="chat-input-row">
       <input id="chatInput" type="text" maxlength="1000" placeholder="Say hi…" autocomplete="off">

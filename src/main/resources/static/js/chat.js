@@ -15,6 +15,7 @@
   const remoteVideo = document.getElementById('remoteVideo');
   const localVideo = document.getElementById('localVideo');
   const remoteOverlay = document.getElementById('remoteOverlay');
+  const searchingIndicator = document.getElementById('searchingIndicator');
   const chatLog = document.getElementById('chatLog');
   const chatForm = document.getElementById('chatForm');
   const chatInput = document.getElementById('chatInput');
@@ -212,6 +213,7 @@
   function joinQueue() {
     setStatus('waiting', SEARCHING_TEXT);
     setSearchingOverlay();
+    searchingIndicator.hidden = false;
     icebreakerBanner.hidden = true;
     send('/app/queue.join', { anonId, interests: myInterests, videoEnabled });
   }
@@ -277,6 +279,7 @@
     matchStartTime = Date.now();
     messageCount = 0;
     setStatus('matched', 'Connected');
+    searchingIndicator.hidden = true;
     resetChatLog();
     appendMessage("You're connected with a stranger. Say hi!", 'system');
     if (event.icebreaker) {
