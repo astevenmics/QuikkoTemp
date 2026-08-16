@@ -15,6 +15,7 @@
     const remoteVideo = document.getElementById('remoteVideo');
     const localVideo = document.getElementById('localVideo');
     const remoteOverlay = document.getElementById('remoteOverlay');
+    const searchingIndicator = document.getElementById('searchingIndicator');
     const chatLog = document.getElementById('chatLog');
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
@@ -118,12 +119,16 @@
     });
 
     // ---------- WebRTC ----------
-    function teardownPeerConnection() {
+    function closePeerConnection() {
         if (pc) {
             pc.close();
             pc = null;
         }
         pendingCandidates = [];
+    }
+
+    function teardownPeerConnection() {
+        closePeerConnection();
         if (videoEnabled) {
             remoteVideo.srcObject = null;
             remoteOverlay.classList.remove('searching');
@@ -133,7 +138,13 @@
     }
 
     async function setupPeerConnection() {
-        teardownPeerConnection();
+        closePeerConnection();
+        if (videoEnabled) {
+            remoteVideo.srcObject = null;
+            remoteOverlay.classList.remove('searching');
+            remoteOverlay.hidden = false;
+            remoteOverlay.textContent = 'Connecting video…';
+        }
         pc = new RTCPeerConnection({ iceServers });
 
         const stream = await ensureLocalMedia();
@@ -208,6 +219,7 @@
     function joinQueue() {
         setStatus('waiting', SEARCHING_TEXT);
         setSearchingOverlay();
+        searchingIndicator.hidden = false;
         icebreakerBanner.hidden = true;
         send('/app/queue.join', { anonId, interests: myInterests, videoEnabled });
     }
@@ -273,6 +285,7 @@
         matchStartTime = Date.now();
         messageCount = 0;
         setStatus('matched', 'Connected');
+        searchingIndicator.hidden = true;
         resetChatLog();
         appendMessage("You're connected with a stranger. Say hi!", 'system');
         if (event.icebreaker) {
