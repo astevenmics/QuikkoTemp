@@ -467,6 +467,9 @@ button { font-family: inherit; }
   font-weight: 600;
   font-size: 0.95rem;
 }
+.searching-indicator[hidden] {
+  display: none;
+}
 .searching-dots {
   display: inline-flex;
   gap: 0.28rem;
