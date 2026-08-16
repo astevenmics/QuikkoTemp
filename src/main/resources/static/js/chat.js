@@ -123,12 +123,21 @@
   });
 
   // ---------- WebRTC ----------
-  function teardownPeerConnection() {
+  // Just releases the RTCPeerConnection — no UI changes. Used both when
+  // actually returning to the queue (via teardownPeerConnection) and when
+  // starting a *new* match's connection (via setupPeerConnection), which
+  // must NOT reset the overlay back to "Searching…" text since the users
+  // are already matched at that point.
+  function closePeerConnection() {
     if (pc) {
       pc.close();
       pc = null;
     }
     pendingCandidates = [];
+  }
+
+  function teardownPeerConnection() {
+    closePeerConnection();
     if (videoEnabled) {
       remoteVideo.srcObject = null;
       remoteOverlay.classList.remove('searching');
@@ -138,7 +147,13 @@
   }
 
   async function setupPeerConnection() {
-    teardownPeerConnection();
+    closePeerConnection();
+    if (videoEnabled) {
+      remoteVideo.srcObject = null;
+      remoteOverlay.classList.remove('searching');
+      remoteOverlay.hidden = false;
+      remoteOverlay.textContent = 'Connecting video…';
+    }
     pc = new RTCPeerConnection({ iceServers });
 
     const stream = await ensureLocalMedia();
