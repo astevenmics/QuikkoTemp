@@ -522,9 +522,19 @@ button { font-family: inherit; }
    not a video call with the video hidden. */
 body.text-only .video-pane { display: none; }
 body.text-only .cam-mic-toggles { display: none; }
+
+/* Side ad slots only appear in text-only mode, flanking a slimmer,
+   centered chat pane instead of letting it stretch full width. */
+.side-ad { display: none; }
+body.text-only .side-ad {
+  display: flex;
+  min-height: 100%;
+  margin: 0;
+}
 body.text-only .chat-layout {
-  grid-template-columns: 1fr !important;
+  grid-template-columns: minmax(120px, 220px) minmax(320px, 680px) minmax(120px, 220px) !important;
   grid-template-rows: 1fr !important;
+  justify-content: center;
 }
 
 .capsule-token-box {
@@ -567,6 +577,9 @@ body.text-only .chat-layout {
 
 @media (max-width: 800px) {
   .chat-layout { grid-template-columns: 1fr; grid-template-rows: 45vh 1fr; }
+  /* No room for side ads on small screens — let the chat pane use the width. */
+  .side-ad { display: none !important; }
+  body.text-only .chat-layout { grid-template-columns: 1fr !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
