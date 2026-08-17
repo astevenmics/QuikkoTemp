@@ -56,7 +56,7 @@ src/main/java/com/quikko/
     PairRegistry                Short-lived "who was I just paired with" memory (for capsules)
     ModerationService (+NoOp)   Pluggable hook for a future external moderation API
     ProfanityFilterService      Local word-list filter
-    RateLimiterService          Join-rate limiting
+    RateLimiterService          Per-IP sliding-window rate limiting (see "Abuse protection")
     ReportService                Report counters + IP bans
     CapsuleService               Time Capsule leave/claim logic (double opt-in)
     store/                       MatchQueueStore & ModerationStore (in-memory)
@@ -113,7 +113,14 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 | `quikko.moderation.report-ban-threshold` | `5` | Reports against an IP before it's temporarily banned |
 | `quikko.moderation.ban-duration-minutes` | `60` | Length of the temporary ban |
 | `quikko.moderation.profanity-words` | (short built-in list) | Comma-separated, case-insensitive |
-| `quikko.rate-limit.max-joins-per-window` / `window-seconds` | `10` / `60` | Join-attempt rate limiting per IP |
+| `quikko.rate-limit.window-seconds` | `60` | Rolling window length shared by every rate-limit bucket below |
+| `quikko.rate-limit.max-joins-per-window` | `10` | Queue-join attempts per IP per window |
+| `quikko.rate-limit.max-chat-messages-per-window` | `60` | Chat messages per IP per window |
+| `quikko.rate-limit.max-skips-per-window` | `30` | Skip actions per IP per window |
+| `quikko.rate-limit.max-reports-per-window` | `10` | Report actions per IP per window |
+| `quikko.rate-limit.max-signals-per-window` | `120` | WebRTC signal relay messages per IP per window |
+| `quikko.rate-limit.max-capsule-leaves-per-window` | `10` | Time Capsule leave attempts per IP per window |
+| `quikko.rate-limit.max-api-requests-per-window` | `60` | Requests to any `/api/*` REST endpoint per IP per window |
 | `quikko.webrtc.stun-urls` | Google's public STUN | Comma-separated STUN server URLs |
 | `quikko.webrtc.turn-url` / `turn-username` / `turn-credential` | empty | TURN server; also settable via `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL` env vars |
 | `quikko.interests.suggested` | Music, Movies, Gaming, … | Comma-separated suggested interest tags shown as chips |
@@ -200,6 +207,45 @@ silently truncated or coerced. A few notes on what was and wasn't applicable her
 - WebSocket frames are additionally capped at 64KB transport-wide
   (`WebSocketConfig#configureWebSocketTransport`) so no single field-level check is the
   only thing standing between the relay and an oversized payload.
+
+## Abuse protection
+
+Every abuse-prone action is sliding-window rate limited per caller IP via
+`com.quikko.service.RateLimiterService`, backed by `ModerationStore`'s
+generic `incrementAttempts(key, window)` counter (in-memory, single
+instance — see "Single instance only" above). Limits are IP-based rather
+than keyed by the client-supplied anonymous id, since that id is trivially
+rotatable by a script (new tab = new id) while the IP is not. Over the
+limit, WebSocket actions get a `RATE_LIMITED` event back (or are silently
+dropped for `signal`, matching its existing drop-and-log behavior for
+malformed input) and REST calls under `/api/*` get an HTTP 429 with a
+`Retry-After` header, via `com.quikko.config.ApiRateLimitFilter`. Every
+inbound `X-Forwarded-For` value is validated as a real IP literal before
+being trusted for this (`com.quikko.validation.ClientIpResolver`) — the
+same guard used at the WebSocket handshake — so it can't be used to spoof
+another IP's identity or dodge the limiter with junk values. A few notes
+on what was and wasn't applicable here:
+
+- **Login attempts** — not applicable; Quikko has no accounts or login,
+  by design (see "No accounts" above).
+- **Account creation** — not applicable, for the same reason.
+- **AI generation requests** — not applicable; the app has no AI/LLM
+  integration anywhere (Common Ground icebreakers are picked from a local
+  static list, see `IcebreakerService`).
+- **API endpoints** — applicable and implemented: every `/api/*` route
+  (`/api/interests`, `/api/webrtc/ice-servers`, `/api/capsules/claim`) is
+  now rate limited, closing off both casual scraping and brute-forcing
+  capsule claim tokens via repeated guesses.
+- **Bots/automated scripts repeatedly calling endpoints** — applicable and
+  implemented across the board: queue joins were already rate limited
+  before this change; chat messages, skips, reports, WebRTC signal relay
+  messages, and Time Capsule leave attempts are now rate limited too, so a
+  script can't flood matches, spam chat, or grief via mass reports/skips
+  any faster than a real user reasonably could.
+- Re-introducing a CAPTCHA was considered out of scope — it was
+  deliberately removed earlier in this app's history in favor of a more
+  visible video/text mode picker, and rate limiting alone covers the
+  "automated scripts calling endpoints" threat without bringing it back.
 
 ## Building a runnable jar
 

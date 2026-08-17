@@ -13,7 +13,7 @@ public class InMemoryModerationStore implements ModerationStore {
 
     private final ConcurrentHashMap<String, AtomicInteger> reportCounts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Instant> bannedUntil = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Window> joinWindows = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Window> rateWindows = new ConcurrentHashMap<>();
 
     @Override
     public int recordReport(String ip) {
@@ -48,9 +48,9 @@ public class InMemoryModerationStore implements ModerationStore {
     }
 
     @Override
-    public int incrementJoinAttempts(String key, Duration window) {
+    public int incrementAttempts(String key, Duration window) {
         Instant now = Instant.now();
-        Window w = joinWindows.compute(key, (k, existing) -> {
+        Window w = rateWindows.compute(key, (k, existing) -> {
             if (existing == null || existing.resetAt.isBefore(now)) {
                 return new Window(now.plus(window), new AtomicInteger(1));
             }
@@ -64,7 +64,7 @@ public class InMemoryModerationStore implements ModerationStore {
     void cleanup() {
         Instant now = Instant.now();
         bannedUntil.entrySet().removeIf(e -> e.getValue().isBefore(now));
-        joinWindows.entrySet().removeIf(e -> e.getValue().resetAt.isBefore(now));
+        rateWindows.entrySet().removeIf(e -> e.getValue().resetAt.isBefore(now));
     }
 
     private static final class Window {

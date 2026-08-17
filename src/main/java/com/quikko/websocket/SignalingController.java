@@ -4,6 +4,7 @@ import com.quikko.model.MatchPair;
 import com.quikko.model.dto.ServerEvent;
 import com.quikko.model.dto.SignalRequest;
 import com.quikko.service.MatchingService;
+import com.quikko.service.RateLimiterService;
 import com.quikko.service.SessionMessenger;
 import com.quikko.validation.InputValidator;
 import org.slf4j.Logger;
@@ -32,15 +33,24 @@ public class SignalingController {
 
     private final MatchingService matchingService;
     private final SessionMessenger messenger;
+    private final SessionRegistry sessionRegistry;
+    private final RateLimiterService rateLimiterService;
 
-    public SignalingController(MatchingService matchingService, SessionMessenger messenger) {
+    public SignalingController(MatchingService matchingService, SessionMessenger messenger,
+                                SessionRegistry sessionRegistry, RateLimiterService rateLimiterService) {
         this.matchingService = matchingService;
         this.messenger = messenger;
+        this.sessionRegistry = sessionRegistry;
+        this.rateLimiterService = rateLimiterService;
     }
 
     @MessageMapping("/signal")
     public void signal(@Payload SignalRequest req) {
         if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!rateLimiterService.allowSignal(sessionRegistry.ipOf(req.getAnonId()))) {
+            log.warn("Dropped /signal message from {} — rate limit exceeded", req.getAnonId());
             return;
         }
         if (!InputValidator.isValidSignalType(req.getSignalType())) {
