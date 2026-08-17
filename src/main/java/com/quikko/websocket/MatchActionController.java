@@ -6,6 +6,7 @@ import com.quikko.model.dto.ServerEvent;
 import com.quikko.service.MatchingService;
 import com.quikko.service.ReportService;
 import com.quikko.service.SessionMessenger;
+import com.quikko.validation.InputValidator;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
@@ -34,7 +35,7 @@ public class MatchActionController {
 
     @MessageMapping("/match.skip")
     public void skip(@Payload MatchActionRequest req) {
-        if (req.getAnonId() == null || req.getPairId() == null) {
+        if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
             return;
         }
         matchingService.endMatch(req.getAnonId(), req.getPairId(), ServerEvent.Type.PARTNER_SKIPPED);
@@ -42,7 +43,7 @@ public class MatchActionController {
 
     @MessageMapping("/report")
     public void report(@Payload MatchActionRequest req) {
-        if (req.getAnonId() == null || req.getPairId() == null) {
+        if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
             return;
         }
         Optional<MatchPair> pairOpt = matchingService.currentPair(req.getAnonId());

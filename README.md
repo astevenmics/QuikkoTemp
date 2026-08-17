@@ -63,6 +63,8 @@ src/main/java/com/quikko/
   model/                        ChatUser, MatchPair, Capsule (JPA entity), dto/*
   repository/                  CapsuleRepository (Spring Data JPA)
   scheduler/                   CapsuleScheduler (daily unlock sweep)
+  validation/                   InputValidator — strict allow-list checks used at every
+                                  entry point (see "Input validation" below)
 
 src/main/resources/
   application.properties           Default config (see below)
@@ -170,6 +172,34 @@ docker run -p 3306:3306 -e MYSQL_DATABASE=quikko -e MYSQL_USER=quikko -e MYSQL_P
   allows). Swap in a real implementation (e.g. calling a third-party text/image
   moderation API) by providing your own `@Service` implementing the interface —
   no other code needs to change since callers only depend on the interface.
+
+## Input validation
+
+Every place user input enters the app is validated at the boundary via
+`com.quikko.validation.InputValidator` (allow-list regex/length checks — anonymous
+session ids, pair ids, interest tags, chat/capsule text, WebRTC signal types, capsule
+claim tokens) before any of it reaches a service or repository. Invalid input is
+rejected outright (dropped, or answered with an `ERROR` event / HTTP 400) rather than
+silently truncated or coerced. A few notes on what was and wasn't applicable here:
+
+- **XSS / script injection** — the frontend renders all user-supplied text via
+  `textContent` (never `innerHTML`) everywhere except one spot (the Time Capsule claim
+  page), which already HTML-escapes before interpolating. No changes were needed there;
+  `InputValidator` additionally rejects control characters in free-text fields as
+  general hygiene.
+- **SQL injection** — the app only ever talks to the database through Spring Data JPA
+  derived query methods (no raw/native SQL, no string-concatenated queries anywhere),
+  which are inherently parameterized. The one real SQL-adjacent exposure was the H2
+  web console (a browser SQL client bound to whatever datasource is configured) being
+  reachable in a hypothetical production deployment — it's now force-disabled under the
+  `mysql` profile and only ever on for local dev.
+- **Command injection** — not applicable; the app never invokes an OS process
+  (no `Runtime.exec`/`ProcessBuilder` anywhere).
+- **Unsafe file uploads** — not applicable; there is no file upload feature or
+  multipart endpoint anywhere in the app.
+- WebSocket frames are additionally capped at 64KB transport-wide
+  (`WebSocketConfig#configureWebSocketTransport`) so no single field-level check is the
+  only thing standing between the relay and an oversized payload.
 
 ## Building a runnable jar
 

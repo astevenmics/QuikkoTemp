@@ -7,6 +7,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 /**
  * STOMP-over-WebSocket wiring. Clients connect anonymously (no Principal/login);
@@ -35,5 +36,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .addInterceptors(new ClientIpHandshakeInterceptor(reportService))
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
+    }
+
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        // Bounds every inbound STOMP frame regardless of destination — the
+        // largest legitimate payload is a WebRTC SDP offer/answer (a few
+        // KB); 64KB is generous headroom without leaving the relay open to
+        // arbitrarily large frames.
+        registration.setMessageSizeLimit(64 * 1024);
+        registration.setSendBufferSizeLimit(512 * 1024);
     }
 }

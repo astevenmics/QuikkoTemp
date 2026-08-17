@@ -7,6 +7,7 @@ import com.quikko.service.MatchingService;
 import com.quikko.service.ModerationService;
 import com.quikko.service.ProfanityFilterService;
 import com.quikko.service.SessionMessenger;
+import com.quikko.validation.InputValidator;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
@@ -33,13 +34,15 @@ public class ChatController {
 
     @MessageMapping("/chat.send")
     public void send(@Payload ChatMessageRequest req) {
-        if (req.getAnonId() == null || req.getPairId() == null || req.getText() == null) {
+        if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!InputValidator.isValidText(req.getText(), MAX_MESSAGE_LENGTH)) {
+            messenger.send(req.getAnonId(), ServerEvent.of(ServerEvent.Type.ERROR)
+                    .message("Message rejected — empty, too long, or contains invalid characters."));
             return;
         }
         String text = req.getText().trim();
-        if (text.isEmpty() || text.length() > MAX_MESSAGE_LENGTH) {
-            return;
-        }
 
         Optional<MatchPair> pairOpt = matchingService.currentPair(req.getAnonId());
         if (pairOpt.isEmpty() || !pairOpt.get().getPairId().equals(req.getPairId())) {

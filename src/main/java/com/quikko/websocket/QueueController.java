@@ -8,12 +8,14 @@ import com.quikko.service.MatchingService;
 import com.quikko.service.RateLimiterService;
 import com.quikko.service.ReportService;
 import com.quikko.service.SessionMessenger;
+import com.quikko.validation.InputValidator;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -38,7 +40,7 @@ public class QueueController {
 
     @MessageMapping("/queue.join")
     public void join(@Payload QueueJoinRequest req, SimpMessageHeaderAccessor headerAccessor) {
-        if (req.getAnonId() == null || req.getAnonId().isBlank()) {
+        if (!InputValidator.isValidAnonId(req.getAnonId())) {
             return;
         }
         String ip = ip(headerAccessor);
@@ -56,23 +58,46 @@ public class QueueController {
             return;
         }
 
-        Set<String> interests = req.getInterests() == null ? Set.of() : new LinkedHashSet<>(req.getInterests());
+        Set<String> interests = validInterests(req.getInterests());
         boolean videoEnabled = req.getVideoEnabled() == null || req.getVideoEnabled();
         matchingService.joinQueue(req.getAnonId(), sessionId, interests, ip, videoEnabled);
     }
 
     @MessageMapping("/queue.leave")
     public void leave(@Payload MatchActionRequest req) {
-        if (req.getAnonId() == null) {
+        if (!InputValidator.isValidAnonId(req.getAnonId())) {
             return;
         }
         matchingService.leaveQueue(req.getAnonId());
-        if (req.getPairId() != null) {
+        if (req.getPairId() != null && InputValidator.isValidPairId(req.getPairId())) {
             Optional<MatchPair> pair = matchingService.currentPair(req.getAnonId());
             if (pair.isPresent() && pair.get().getPairId().equals(req.getPairId())) {
                 matchingService.endMatch(req.getAnonId(), req.getPairId(), ServerEvent.Type.PARTNER_LEFT);
             }
         }
+    }
+
+    /**
+     * Silently drops any tag that fails the strict interest charset/length
+     * check rather than rejecting the whole join — a single malformed tag
+     * shouldn't block someone from entering the queue. MatchingService caps
+     * the resulting set size again as defense-in-depth.
+     */
+    private Set<String> validInterests(List<String> raw) {
+        if (raw == null) {
+            return Set.of();
+        }
+        Set<String> valid = new LinkedHashSet<>();
+        for (String tag : raw) {
+            if (tag == null) {
+                continue;
+            }
+            String trimmed = tag.trim();
+            if (InputValidator.isValidInterest(trimmed)) {
+                valid.add(trimmed);
+            }
+        }
+        return valid;
     }
 
     private String ip(SimpMessageHeaderAccessor headerAccessor) {
