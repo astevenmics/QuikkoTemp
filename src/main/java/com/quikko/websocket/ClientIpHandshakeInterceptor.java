@@ -8,6 +8,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Captures the caller's IP at WebSocket handshake time (so later STOMP frames on this session can be IP-rate-limited / attributed for reports) and rejects the handshake outright if that IP is currently banned.
@@ -15,6 +16,10 @@ import java.util.Map;
 public class ClientIpHandshakeInterceptor implements HandshakeInterceptor {
 
     static final String IP_ATTRIBUTE = "ip";
+
+    private static final Pattern IPV4 = Pattern.compile(
+            "^(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}$");
+    private static final Pattern IPV6 = Pattern.compile("^[0-9a-fA-F:]{2,45}$");
 
     private final ReportService reportService;
 
@@ -36,14 +41,15 @@ public class ClientIpHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                               WebSocketHandler wsHandler, Exception exception) {
-        // no-op
-    }
+                               WebSocketHandler wsHandler, Exception exception) { }
 
     private String resolveIp(ServerHttpRequest request) {
         String forwarded = request.getHeaders().getFirst("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+            String candidate = forwarded.split(",")[0].trim();
+            if (isValidIpLiteral(candidate)) {
+                return candidate;
+            }
         }
         if (request instanceof ServletServerHttpRequest servletRequest) {
             return servletRequest.getServletRequest().getRemoteAddr();
@@ -51,5 +57,9 @@ public class ClientIpHandshakeInterceptor implements HandshakeInterceptor {
         return request.getRemoteAddress() != null
                 ? request.getRemoteAddress().getAddress().getHostAddress()
                 : "unknown";
+    }
+
+    private boolean isValidIpLiteral(String value) {
+        return IPV4.matcher(value).matches() || (value.contains(":") && IPV6.matcher(value).matches());
     }
 }

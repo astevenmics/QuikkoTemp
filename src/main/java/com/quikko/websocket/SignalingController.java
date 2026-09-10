@@ -5,6 +5,9 @@ import com.quikko.model.dto.ServerEvent;
 import com.quikko.model.dto.SignalRequest;
 import com.quikko.service.MatchingService;
 import com.quikko.service.SessionMessenger;
+import com.quikko.validation.InputValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
@@ -19,6 +22,10 @@ import java.util.Optional;
 @Controller
 public class SignalingController {
 
+    private static final Logger log = LoggerFactory.getLogger(SignalingController.class);
+
+    private static final int MAX_PAYLOAD_CHARS = 32_000;
+
     private final MatchingService matchingService;
     private final SessionMessenger messenger;
 
@@ -29,7 +36,15 @@ public class SignalingController {
 
     @MessageMapping("/signal")
     public void signal(@Payload SignalRequest req) {
-        if (req.getAnonId() == null || req.getPairId() == null) {
+        if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!InputValidator.isValidSignalType(req.getSignalType())) {
+            log.warn("Dropped /signal message with unrecognized signalType from {}", req.getAnonId());
+            return;
+        }
+        if(req.getPayload() == null || req.getPayload().toString().length() > MAX_PAYLOAD_CHARS) {
+            log.warn("Dropped oversized/empty /signal payloads from {}", req.getAnonId());
             return;
         }
         Optional<MatchPair> pairOpt = matchingService.currentPair(req.getAnonId());

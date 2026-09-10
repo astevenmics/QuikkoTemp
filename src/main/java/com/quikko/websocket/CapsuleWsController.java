@@ -4,6 +4,7 @@ import com.quikko.model.dto.CapsuleLeaveRequest;
 import com.quikko.model.dto.ServerEvent;
 import com.quikko.service.CapsuleService;
 import com.quikko.service.SessionMessenger;
+import com.quikko.validation.InputValidator;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
@@ -23,7 +24,7 @@ public class CapsuleWsController {
 
     @MessageMapping("/capsule.leave")
     public void leave(@Payload CapsuleLeaveRequest req) {
-        if (req.getAnonId() == null || req.getPairId() == null) {
+        if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
             return;
         }
         Optional<String> token = capsuleService.leaveCapsule(req.getPairId(), req.getAnonId(), req.getMessage());

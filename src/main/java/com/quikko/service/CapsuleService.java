@@ -4,6 +4,7 @@ import com.quikko.config.AppProperties;
 import com.quikko.model.Capsule;
 import com.quikko.model.dto.CapsuleClaimResponse;
 import com.quikko.repository.CapsuleRepository;
+import com.quikko.validation.InputValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,18 +41,16 @@ public class CapsuleService {
     @Transactional
     public Optional<String> leaveCapsule(String pairId, String senderAnonId, String rawMessage) {
         Optional<String> recipientOpt = pairRegistry.otherOf(pairId, senderAnonId);
-        if (recipientOpt.isEmpty() || rawMessage == null) {
-            return Optional.empty();
-        }
-        String recipientAnonId = recipientOpt.get();
-        String message = rawMessage.trim();
-        if (message.isEmpty()) {
+        if (recipientOpt.isEmpty()) {
             return Optional.empty();
         }
         int maxLength = props.getCapsule().getMaxLength();
-        if (message.length() > maxLength) {
-            message = message.substring(0, maxLength);
+        if (!InputValidator.isValidText(rawMessage, maxLength)) {
+            return Optional.empty();
         }
+
+        String recipientAnonId = recipientOpt.get();
+        String message = rawMessage.trim();
 
         Optional<Capsule> existing = repository.findBySenderAnonIdAndRecipientAnonIdAndPairId(
                 senderAnonId, recipientAnonId, pairId);

@@ -2,6 +2,8 @@ package com.quikko.controller;
 
 import com.quikko.model.dto.CapsuleClaimResponse;
 import com.quikko.service.CapsuleService;
+import jakarta.validation.constraints.Pattern;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,7 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
  * claiming happens independently, any time after, via this REST endpoint and the token the user was given.
  */
 @RestController
+@Validated
 public class CapsuleController {
+
+    private static final String TOKEN_PATTERN = "^[A-Za-z0-9_-]{16,64}$";
 
     private final CapsuleService capsuleService;
 
@@ -21,7 +26,11 @@ public class CapsuleController {
     }
 
     @GetMapping("/api/capsules/claim")
-    public CapsuleClaimResponse claim(@RequestParam String token) {
+    public CapsuleClaimResponse claim(
+            @RequestParam
+            @Pattern(regexp = TOKEN_PATTERN, message = "Invalid capsule token format")
+            String token
+    ) {
         return capsuleService.claim(token);
     }
 }
