@@ -109,6 +109,12 @@ public class AppProperties {
     public static class RateLimit {
         private int maxJoinsPerWindow = 10;
         private int windowSeconds = 60;
+        private int maxChatMessagesPerWindow = 60;
+        private int maxSkipsPerWindow = 30;
+        private int maxReportsPerWindow = 10;
+        private int maxSignalsPerWindow = 120;
+        private int maxCapsuleLeavesPerWindow = 10;
+        private int maxApiRequestsPerWindow = 60;
 
         public int getMaxJoinsPerWindow() {
             return maxJoinsPerWindow;
@@ -124,6 +130,54 @@ public class AppProperties {
 
         public void setWindowSeconds(int windowSeconds) {
             this.windowSeconds = windowSeconds;
+        }
+
+        public int getMaxChatMessagesPerWindow() {
+            return maxChatMessagesPerWindow;
+        }
+
+        public void setMaxChatMessagesPerWindow(int maxChatMessagesPerWindow) {
+            this.maxChatMessagesPerWindow = maxChatMessagesPerWindow;
+        }
+
+        public int getMaxSkipsPerWindow() {
+            return maxSkipsPerWindow;
+        }
+
+        public void setMaxSkipsPerWindow(int maxSkipsPerWindow) {
+            this.maxSkipsPerWindow = maxSkipsPerWindow;
+        }
+
+        public int getMaxReportsPerWindow() {
+            return maxReportsPerWindow;
+        }
+
+        public void setMaxReportsPerWindow(int maxReportsPerWindow) {
+            this.maxReportsPerWindow = maxReportsPerWindow;
+        }
+
+        public int getMaxSignalsPerWindow() {
+            return maxSignalsPerWindow;
+        }
+
+        public void setMaxSignalsPerWindow(int maxSignalsPerWindow) {
+            this.maxSignalsPerWindow = maxSignalsPerWindow;
+        }
+
+        public int getMaxCapsuleLeavesPerWindow() {
+            return maxCapsuleLeavesPerWindow;
+        }
+
+        public void setMaxCapsuleLeavesPerWindow(int maxCapsuleLeavesPerWindow) {
+            this.maxCapsuleLeavesPerWindow = maxCapsuleLeavesPerWindow;
+        }
+
+        public int getMaxApiRequestsPerWindow() {
+            return maxApiRequestsPerWindow;
+        }
+
+        public void setMaxApiRequestsPerWindow(int maxApiRequestsPerWindow) {
+            this.maxApiRequestsPerWindow = maxApiRequestsPerWindow;
         }
     }
 

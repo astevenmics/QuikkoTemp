@@ -21,11 +21,48 @@ public class RateLimiterService {
     }
 
     public boolean allowJoin(String ip) {
+        AppProperties.RateLimit rl = props.getRateLimit();
+        return allow("join", ip, rl.getMaxJoinsPerWindow(), rl.getWindowSeconds());
+    }
+
+    public boolean allowChatMessage(String ip) {
+        AppProperties.RateLimit rl = props.getRateLimit();
+        return allow("chat", ip, rl.getMaxChatMessagesPerWindow(), rl.getWindowSeconds());
+    }
+
+    public boolean allowSkip(String ip) {
+        AppProperties.RateLimit rl = props.getRateLimit();
+        return allow("skip", ip, rl.getMaxSkipsPerWindow(), rl.getWindowSeconds());
+    }
+
+    public boolean allowReport(String ip) {
+        AppProperties.RateLimit rl = props.getRateLimit();
+        return allow("report", ip, rl.getMaxReportsPerWindow(), rl.getWindowSeconds());
+    }
+
+    public boolean allowSignal(String ip) {
+        AppProperties.RateLimit rl = props.getRateLimit();
+        return allow("signal", ip, rl.getMaxSignalsPerWindow(), rl.getWindowSeconds());
+    }
+
+    public boolean allowCapsuleLeave(String ip) {
+        AppProperties.RateLimit rl = props.getRateLimit();
+        return allow("capsule", ip, rl.getMaxCapsuleLeavesPerWindow(), rl.getWindowSeconds());
+    }
+
+    public boolean allowApiRequest(String ip) {
+        AppProperties.RateLimit rl = props.getRateLimit();
+        return allow("api", ip, rl.getMaxApiRequestsPerWindow(), rl.getWindowSeconds());
+    }
+
+    private boolean allow(String bucket, String ip, int maxPerWindow, int windowSeconds) {
         if (ip == null) {
             return true;
         }
-        Duration window = Duration.ofSeconds(props.getRateLimit().getWindowSeconds());
-        int count = store.incrementJoinAttempts(ip, window);
-        return count <= props.getRateLimit().getMaxJoinsPerWindow();
+        Duration window = Duration.ofSeconds(windowSeconds);
+        int count = store.incrementAttempts(bucket + ":" + ip, window);
+        return count <= maxPerWindow;
     }
+
+
 }

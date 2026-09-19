@@ -20,5 +20,5 @@ public interface ModerationStore {
      * Increments the join-attempt counter for {@code key} within a rolling window and returns the count after incrementing.
      * The counter expires automatically after {@code window}.
      */
-    int incrementJoinAttempts(String key, Duration window);
+    int incrementAttempts(String key, Duration window);
 }
