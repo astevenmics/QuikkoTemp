@@ -20,11 +20,27 @@
   function anonId() {
     let id = sessionStorage.getItem('quikko_anon_id');
     if (!id) {
-      id = (crypto.randomUUID ? crypto.randomUUID() : ('id-' + Math.random().toString(36).slice(2) + Date.now()));
+      id = crypto.randomUUID();
       sessionStorage.setItem('quikko_anon_id', id);
     }
     return id;
   }
+
+  // crypto.randomUUID requires a secure context (HTTPS, or localhost) and a
+  // modern browser. Rather than silently downgrading to a weak, predictable
+  // id (which would make session hijacking/guessing trivial), refuse to run
+  // at all and tell the visitor why.
+  if (!window.crypto || typeof window.crypto.randomUUID !== 'function') {
+    document.body.innerHTML =
+      '<main class="landing"><section class="card start-card">' +
+      '<h2>Unsupported browser or connection</h2>' +
+      '<p class="hint">Quikko requires a modern browser and a secure connection ' +
+      '(HTTPS, or localhost) to generate a private session id safely. Please update ' +
+      'your browser or access this site over HTTPS.</p>' +
+      '</section></main>';
+    return;
+  }
+
   anonId();
 
   function renderChip(tag) {
