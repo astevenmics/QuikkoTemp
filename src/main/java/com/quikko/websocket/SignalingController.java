@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.util.Optional;
@@ -45,8 +46,11 @@ public class SignalingController {
     }
 
     @MessageMapping("/signal")
-    public void signal(@Payload SignalRequest req) {
+    public void signal(@Payload SignalRequest req, SimpMessageHeaderAccessor headerAccessor) {
         if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!req.getAnonId().equals(sessionRegistry.anonIdFor(headerAccessor.getSessionId()))) {
             return;
         }
         if (!rateLimiterService.allowSignal(sessionRegistry.ipOf(req.getAnonId()))) {

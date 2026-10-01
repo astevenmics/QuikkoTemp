@@ -8,6 +8,7 @@ import com.quikko.service.SessionMessenger;
 import com.quikko.validation.InputValidator;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.util.Optional;
@@ -29,8 +30,11 @@ public class CapsuleWsController {
     }
 
     @MessageMapping("/capsule.leave")
-    public void leave(@Payload CapsuleLeaveRequest req) {
+    public void leave(@Payload CapsuleLeaveRequest req, SimpMessageHeaderAccessor headerAccessor) {
         if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!req.getAnonId().equals(sessionRegistry.anonIdFor(headerAccessor.getSessionId()))) {
             return;
         }
         if (!rateLimiterService.allowCapsuleLeave(sessionRegistry.ipOf(req.getAnonId()))) {

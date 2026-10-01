@@ -11,6 +11,7 @@ import com.quikko.service.SessionMessenger;
 import com.quikko.validation.InputValidator;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.util.Optional;
@@ -39,8 +40,11 @@ public class ChatController {
     }
 
     @MessageMapping("/chat.send")
-    public void send(@Payload ChatMessageRequest req) {
+    public void send(@Payload ChatMessageRequest req, SimpMessageHeaderAccessor headerAccessor) {
         if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!req.getAnonId().equals(sessionRegistry.anonIdFor(headerAccessor.getSessionId()))) {
             return;
         }
         if (!rateLimiterService.allowChatMessage(sessionRegistry.ipOf(req.getAnonId()))) {
