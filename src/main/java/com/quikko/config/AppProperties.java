@@ -233,8 +233,8 @@ public class AppProperties {
     public static class Webrtc {
         private String stunUrls = "stun:stun.l.google.com:19302";
         private String turnUrl = "";
-        private String turnUsername = "";
-        private String turnCredential = "";
+        private String turnSecret = "";
+        private int turnCredentialTtlSeconds = 600;
 
         public String getStunUrls() {
             return stunUrls;
@@ -252,20 +252,26 @@ public class AppProperties {
             this.turnUrl = turnUrl;
         }
 
-        public String getTurnUsername() {
-            return turnUsername;
+        /**
+         * Shared secret for coturn's time-limited REST API / use-auth-secret
+         * scheme — used to compute a short-lived username/credential pair
+         * per request rather than handing out one static, reusable
+         * credential to every caller of /api/webrtc/ice-servers.
+         */
+        public String getTurnSecret() {
+            return turnSecret;
         }
 
-        public void setTurnUsername(String turnUsername) {
-            this.turnUsername = turnUsername;
+        public void setTurnSecret(String turnSecret) {
+            this.turnSecret = turnSecret;
         }
 
-        public String getTurnCredential() {
-            return turnCredential;
+        public int getTurnCredentialTtlSeconds() {
+            return turnCredentialTtlSeconds;
         }
 
-        public void setTurnCredential(String turnCredential) {
-            this.turnCredential = turnCredential;
+        public void setTurnCredentialTtlSeconds(int turnCredentialTtlSeconds) {
+            this.turnCredentialTtlSeconds = turnCredentialTtlSeconds;
         }
 
         public List<String> stunList() {
