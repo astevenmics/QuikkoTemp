@@ -65,20 +65,27 @@ src/main/java/com/quikko/
   scheduler/                   CapsuleScheduler (daily unlock sweep)
   validation/                   InputValidator — strict allow-list checks used at every
                                   entry point (see "Input validation" below)
+                                  ClientIpResolver — trusted-proxy-aware IP resolution
+                                  (see "Security headers & hardening" below)
 
 src/main/resources/
   application.properties           Default config (see below)
+  application-dev.properties        Local-dev-only overrides (H2 console)
   application-mysql.properties      MySQL profile overrides
   static/                          index.html, chat.html, capsule.html, css/, js/
 ```
 
+`config/` also holds `ApiRateLimitFilter` and `SecurityHeadersFilter` — both plain
+`OncePerRequestFilter`s, auto-registered as servlet filters via `@Component`.
+
 ## Running locally (zero setup)
 
-Requires JDK 21 and Maven. No MySQL, no `.env` file needed — the default profile uses
-an in-memory H2 database and an in-memory matching queue.
+Requires JDK 21. No MySQL, no `.env` file, no local Maven install needed — the
+bundled wrapper downloads the right Maven version, and the default profile uses an
+in-memory H2 database and an in-memory matching queue.
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Then open **two** browser tabs/windows (or one normal + one incognito, so they get
@@ -123,8 +130,11 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 | `quikko.rate-limit.max-signals-per-window` | `120` | WebRTC signal relay messages per IP per window |
 | `quikko.rate-limit.max-capsule-leaves-per-window` | `10` | Time Capsule leave attempts per IP per window |
 | `quikko.rate-limit.max-api-requests-per-window` | `60` | Requests to any `/api/*` REST endpoint per IP per window |
+| `quikko.security.trusted-proxies` | empty | Comma-separated CIDRs/IPs of reverse proxies allowed to set `X-Forwarded-For`; empty = never trust it, always use the raw socket address. **Set this when deployed behind a reverse proxy/PaaS load balancer** — see "Security headers & hardening" below |
+| `quikko.security.allowed-origins` | empty | Comma-separated browser origins allowed to open the `/ws` WebSocket; empty = same-origin only |
 | `quikko.webrtc.stun-urls` | Google's public STUN | Comma-separated STUN server URLs |
-| `quikko.webrtc.turn-url` / `turn-username` / `turn-credential` | empty | TURN server; also settable via `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL` env vars |
+| `quikko.webrtc.turn-url` / `turn-secret` | empty | TURN server + shared secret for ephemeral HMAC credentials; also settable via `TURN_URL`, `TURN_SECRET` env vars |
+| `quikko.webrtc.turn-credential-ttl-seconds` | `600` | How long an issued TURN credential stays valid |
 | `quikko.interests.suggested` | Music, Movies, Gaming, … | Comma-separated suggested interest tags shown as chips |
 | `quikko.capsule.unlock-after-days` | `7` | Time Capsule unlock delay |
 | `quikko.capsule.max-length` | `280` | Max capsule message length |
@@ -134,8 +144,9 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 | Variable | Used for |
 |---|---|
 | `PORT` | HTTP port (default 8080) |
-| `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL` | TURN server for WebRTC relay in production |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | MySQL connection (only read when the `mysql` profile is active; `DB_PORT` defaults to `3306`) |
+| `TURN_URL`, `TURN_SECRET` | TURN server + shared secret for WebRTC relay in production (see "Security headers & hardening" below) |
+| `DB_HOST`, `DB_PORT`, `DB_NAME` | MySQL connection (only read when the `mysql` profile is active; `DB_PORT` defaults to `3306`, `DB_HOST`/`DB_NAME` default to `localhost`/`quikko`) |
+| `DB_USERNAME`, `DB_PASSWORD` | MySQL credentials — **required** when the `mysql` profile is active, no default; the app refuses to start without them rather than falling back to a guessable credential |
 
 ### Switching to MySQL
 
@@ -146,7 +157,7 @@ The `mysql` Spring profile is a convenience bundle that sets the relevant
 # MySQL for Time Capsules, still using the in-memory queue
 SPRING_PROFILES_ACTIVE=mysql \
 DB_HOST=db.internal DB_USERNAME=quikko DB_PASSWORD=secret \
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Run a local MySQL for testing this with Docker:
@@ -163,9 +174,17 @@ docker run -p 3306:3306 -e MYSQL_DATABASE=quikko -e MYSQL_USER=quikko -e MYSQL_P
 - **TURN server is required for real-world use.** STUN alone lets two peers discover
   their public IP/port, but it does **not** help when both sides are behind symmetric
   NATs or restrictive corporate firewalls — a sizeable fraction of real users. Run a
-  TURN server (e.g. [coturn](https://github.com/coturn/coturn)) and set `TURN_URL`,
-  `TURN_USERNAME`, `TURN_CREDENTIAL` (short-lived/HMAC credentials recommended over
-  static ones).
+  TURN server that supports the use-auth-secret / time-limited REST API scheme (e.g.
+  [coturn](https://github.com/coturn/coturn) with `static-auth-secret` configured) and
+  set `TURN_URL`, `TURN_SECRET` — see "Security headers & hardening" below.
+- **Put Quikko behind a reverse proxy correctly, or rate limits/bans will misfire.**
+  If you run nginx/Caddy/a PaaS load balancer in front of Quikko, set
+  `quikko.security.trusted-proxies` to that proxy's IP(s)/CIDR so the app can recover
+  the real client IP from `X-Forwarded-For` — otherwise every visitor is rate-limited
+  and banned as if they were the proxy itself. Also set
+  `server.forward-headers-strategy=framework` (a standard Spring Boot property) so the
+  security-headers filter's HTTPS detection (for `Strict-Transport-Security`) honors
+  the proxy's `X-Forwarded-Proto` instead of only recognizing a direct TLS connection.
 - **Single instance only.** The matching queue, IP bans, and rate limits are all
   in-memory and process-local — running more than one app instance behind a load
   balancer will split traffic across independent, unsynchronized queues. Keep Quikko
@@ -210,6 +229,44 @@ silently truncated or coerced. A few notes on what was and wasn't applicable her
   (`WebSocketConfig#configureWebSocketTransport`) so no single field-level check is the
   only thing standing between the relay and an oversized payload.
 
+## Security headers & hardening
+
+A few structural hardening items beyond input validation, applied directly (there's
+no Spring Security filter chain here, by design — no accounts):
+
+- **Trusted-proxy-aware `X-Forwarded-For`.** `com.quikko.validation.ClientIpResolver`
+  only honors `X-Forwarded-For` when the request's real socket address matches
+  `quikko.security.trusted-proxies`; otherwise every rate-limit/ban decision uses the
+  raw socket address, so a client can no longer spoof the header to bypass either one.
+  Used both for `/api/*` requests and at the `/ws` handshake.
+- **Session-bound anonId on every WebSocket message.** `queue.join` is the only place
+  a STOMP session's anonId is *established* (`SessionRegistry.register`). Every other
+  handler (`chat.send`, `signal`, `match.skip`, `report`, `capsule.leave`,
+  `queue.leave`) now checks the payload's claimed anonId against
+  `SessionRegistry.anonIdFor(sessionId)` and silently drops the message on a mismatch
+  — a connection can no longer act as an arbitrary anonId it merely claims.
+- **Restricted WebSocket origins.** `quikko.security.allowed-origins` replaces the
+  previous wildcard; empty (default) means same-origin only.
+- **Fail-closed anonymous id generation.** The frontend refuses to run (shows a clear
+  message) rather than falling back to `Math.random()` if `crypto.randomUUID` isn't
+  available (old browser, or not a secure context) — the id is used for rate
+  limiting/moderation/session binding, so it needs to actually be unguessable.
+- **H2 console off by default**, including for the local H2 profile — opt in locally
+  with `SPRING_PROFILES_ACTIVE=dev` (`application-dev.properties`).
+- **No default DB credentials.** `DB_USERNAME`/`DB_PASSWORD` have no fallback under
+  the `mysql` profile — a deployment that forgets to set them fails to start instead
+  of silently connecting with a guessable credential.
+- **Baseline security headers** (`com.quikko.config.SecurityHeadersFilter`) on every
+  response: `Content-Security-Policy` (self-only script/style, `wss:`/`https:` for
+  the STOMP connection and SockJS fallbacks), `X-Frame-Options: DENY`,
+  `Referrer-Policy: no-referrer`, and `Strict-Transport-Security` (only when the
+  request is already HTTPS, so local HTTP dev is unaffected).
+- **Ephemeral, time-limited TURN credentials** instead of one static, reusable pair —
+  see `quikko.webrtc.turn-secret` above. `/api/webrtc/ice-servers` computes a fresh
+  HMAC-SHA1 username/credential per request (coturn's use-auth-secret scheme) that
+  stops working after `turn-credential-ttl-seconds`, so scraping the endpoint only
+  yields a short-lived credential rather than a permanent one.
+
 ## Abuse protection
 
 Every abuse-prone action is sliding-window rate limited per caller IP via
@@ -252,13 +309,35 @@ on what was and wasn't applicable here:
 ## Building a runnable jar
 
 ```bash
-mvn clean package
+./mvnw clean package
 java -jar target/quikko.jar
 ```
 
-## Manual test notes
+## Running in Docker
 
-The end-to-end flow (queue → interest-based match → icebreaker → chat relay →
-profanity filtering → WebRTC signaling relay → skip → Time Capsule token issuance →
-claim page) has been exercised against a running instance using a raw STOMP/WebSocket
-script; no automated test suite is included yet.
+```bash
+docker build -t quikko .
+docker run -p 8080:8080 quikko
+```
+
+Pass any of the environment variables above with `-e` (e.g. `-e SPRING_PROFILES_ACTIVE=mysql
+-e DB_HOST=... -e DB_USERNAME=... -e DB_PASSWORD=...`).
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs `./mvnw -B clean verify` (build + the test suite below)
+on every push and pull request to `master`. No deploy step.
+
+## Automated tests
+
+```bash
+./mvnw test
+```
+
+Unit tests (JUnit 5 + Mockito + AssertJ, all from `spring-boot-starter-test`, no Spring
+context needed) cover the matching/pairing algorithm, rate limiting, the Time Capsule
+double opt-in unlock logic, input validation, trusted-proxy-aware IP resolution, and
+the WebSocket session-binding fix described above. Beyond that, the end-to-end flow
+(queue → interest-based match → icebreaker → chat relay → profanity filtering → WebRTC
+signaling relay → skip → Time Capsule token issuance → claim page) has also been
+exercised manually against a running instance using a raw STOMP/WebSocket script.
