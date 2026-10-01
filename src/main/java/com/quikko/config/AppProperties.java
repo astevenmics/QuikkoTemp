@@ -16,6 +16,7 @@ public class AppProperties {
     private final Matching matching = new Matching();
     private final Moderation moderation = new Moderation();
     private final RateLimit rateLimit = new RateLimit();
+    private final Security security = new Security();
     private final Webrtc webrtc = new Webrtc();
     private final Interests interests = new Interests();
     private final Capsule capsule = new Capsule();
@@ -30,6 +31,10 @@ public class AppProperties {
 
     public RateLimit getRateLimit() {
         return rateLimit;
+    }
+
+    public Security getSecurity() {
+        return security;
     }
 
     public Webrtc getWebrtc() {
@@ -178,6 +183,50 @@ public class AppProperties {
 
         public void setMaxApiRequestsPerWindow(int maxApiRequestsPerWindow) {
             this.maxApiRequestsPerWindow = maxApiRequestsPerWindow;
+        }
+    }
+
+    /**
+     * Trust boundary settings: which upstream proxies may be trusted to set
+     * {@code X-Forwarded-For} (empty = none — always use the raw socket
+     * address), and which browser origins may open a WebSocket connection.
+     */
+    public static class Security {
+        private String trustedProxies = "";
+        private String allowedOrigins = "";
+
+        public String getTrustedProxies() {
+            return trustedProxies;
+        }
+
+        public void setTrustedProxies(String trustedProxies) {
+            this.trustedProxies = trustedProxies;
+        }
+
+        public List<String> trustedProxiesList() {
+            return Arrays.stream(trustedProxies.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+        }
+
+        public String getAllowedOrigins() {
+            return allowedOrigins;
+        }
+
+        public void setAllowedOrigins(String allowedOrigins) {
+            this.allowedOrigins = allowedOrigins;
+        }
+
+        /**
+         * Empty means same-origin only (Spring's own default when no origin
+         * patterns are registered at all).
+         */
+        public List<String> allowedOriginsList() {
+            return Arrays.stream(allowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
         }
     }
 

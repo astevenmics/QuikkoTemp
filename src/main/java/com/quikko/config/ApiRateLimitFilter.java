@@ -37,7 +37,7 @@ public class ApiRateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        String ip = ClientIpResolver.resolve(request);
+        String ip = ClientIpResolver.resolve(request, props.getSecurity().trustedProxiesList());
         if (!rateLimiterService.allowApiRequest(ip)) {
             response.setStatus(429);
             response.setHeader("Retry-After", String.valueOf(props.getRateLimit().getWindowSeconds()));

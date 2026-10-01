@@ -19,9 +19,11 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final ReportService reportService;
+    private final AppProperties props;
 
-    public WebSocketConfig(ReportService reportService) {
+    public WebSocketConfig(ReportService reportService, AppProperties props) {
         this.reportService = reportService;
+        this.props = props;
     }
 
     @Override
@@ -33,8 +35,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .addInterceptors(new ClientIpHandshakeInterceptor(reportService))
-                .setAllowedOriginPatterns("*")
+                .addInterceptors(new ClientIpHandshakeInterceptor(reportService, props))
+                .setAllowedOriginPatterns(props.getSecurity().allowedOriginsList().toArray(new String[0]))
                 .withSockJS();
     }
 
