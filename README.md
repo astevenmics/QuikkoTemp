@@ -97,8 +97,10 @@ browsers treat `localhost` as a secure context for WebRTC).
 
 To test the 7-day unlock without waiting a week, either:
 - temporarily set `quikko.capsule.unlock-after-days=0` in `application.properties` and restart, or
-- open the H2 console at `/h2-console` (JDBC URL `jdbc:h2:mem:quikko`, user `sa`, blank
-  password) and manually back-date the `UNLOCK_AT` column of the two `CAPSULES` rows.
+- restart with `SPRING_PROFILES_ACTIVE=dev` to enable the H2 console at `/h2-console`
+  (JDBC URL `jdbc:h2:mem:quikko`, user `sa`, blank password — **off by default**, even
+  for the local H2 profile, see "Security headers & hardening" below) and manually
+  back-date the `UNLOCK_AT` column of the two `CAPSULES` rows.
 
 ## Configuration reference (`application.properties`)
 
