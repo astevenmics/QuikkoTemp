@@ -10,6 +10,7 @@ import com.quikko.service.SessionMessenger;
 import com.quikko.validation.InputValidator;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.util.Optional;
@@ -37,8 +38,11 @@ public class MatchActionController {
     }
 
     @MessageMapping("/match.skip")
-    public void skip(@Payload MatchActionRequest req) {
+    public void skip(@Payload MatchActionRequest req, SimpMessageHeaderAccessor headerAccessor) {
         if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!req.getAnonId().equals(sessionRegistry.anonIdFor(headerAccessor.getSessionId()))) {
             return;
         }
         if(!rateLimiterService.allowSkip(sessionRegistry.ipOf(req.getAnonId()))) {
@@ -50,8 +54,11 @@ public class MatchActionController {
     }
 
     @MessageMapping("/report")
-    public void report(@Payload MatchActionRequest req) {
+    public void report(@Payload MatchActionRequest req, SimpMessageHeaderAccessor headerAccessor) {
         if (!InputValidator.isValidAnonId(req.getAnonId()) || !InputValidator.isValidPairId(req.getPairId())) {
+            return;
+        }
+        if (!req.getAnonId().equals(sessionRegistry.anonIdFor(headerAccessor.getSessionId()))) {
             return;
         }
         if(!rateLimiterService.allowReport(sessionRegistry.ipOf(req.getAnonId()))) {

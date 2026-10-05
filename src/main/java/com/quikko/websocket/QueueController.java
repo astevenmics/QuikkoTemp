@@ -64,8 +64,11 @@ public class QueueController {
     }
 
     @MessageMapping("/queue.leave")
-    public void leave(@Payload MatchActionRequest req) {
+    public void leave(@Payload MatchActionRequest req, SimpMessageHeaderAccessor headerAccessor) {
         if (!InputValidator.isValidAnonId(req.getAnonId())) {
+            return;
+        }
+        if (!req.getAnonId().equals(sessionRegistry.anonIdFor(headerAccessor.getSessionId()))) {
             return;
         }
         matchingService.leaveQueue(req.getAnonId());
