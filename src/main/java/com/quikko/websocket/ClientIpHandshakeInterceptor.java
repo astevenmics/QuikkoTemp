@@ -1,5 +1,6 @@
 package com.quikko.websocket;
 
+import com.quikko.config.AppProperties;
 import com.quikko.service.ReportService;
 import com.quikko.validation.ClientIpResolver;
 import org.springframework.http.server.ServerHttpRequest;
@@ -18,9 +19,11 @@ public class ClientIpHandshakeInterceptor implements HandshakeInterceptor {
     static final String IP_ATTRIBUTE = "ip";
 
     private final ReportService reportService;
+    private final AppProperties appProperties;
 
-    public ClientIpHandshakeInterceptor(ReportService reportService) {
+    public ClientIpHandshakeInterceptor(ReportService reportService, AppProperties appProperties) {
         this.reportService = reportService;
+        this.appProperties = appProperties;
     }
 
     @Override
@@ -48,6 +51,6 @@ public class ClientIpHandshakeInterceptor implements HandshakeInterceptor {
                     ? request.getRemoteAddress().getHostString()
                     : "unknown";
         }
-        return ClientIpResolver.resolve(request.getHeaders().getFirst("X-Forwarded-For"), fallback);
+        return ClientIpResolver.resolve(request.getHeaders().getFirst("X-Forwarded-For"), fallback, appProperties.getSecurity().trustedProxiesList());
     }
 }

@@ -1,6 +1,7 @@
 package com.quikko.config;
 
 import com.quikko.service.ReportService;
+import com.quikko.validation.ClientIpResolver;
 import com.quikko.websocket.ClientIpHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -18,9 +19,11 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final ReportService reportService;
+    private final AppProperties appProperties;
 
-    public WebSocketConfig(ReportService reportService) {
+    public WebSocketConfig(ReportService reportService, AppProperties appProperties) {
         this.reportService = reportService;
+        this.appProperties = appProperties;
     }
 
     @Override
@@ -32,8 +35,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .addInterceptors(new ClientIpHandshakeInterceptor(reportService))
-                .setAllowedOriginPatterns("*")
+                .addInterceptors(new ClientIpHandshakeInterceptor(reportService, appProperties))
+                .setAllowedOriginPatterns(appProperties.getSecurity().allowedOriginsList().toArray(new String[0]))
                 .withSockJS();
     }
 
