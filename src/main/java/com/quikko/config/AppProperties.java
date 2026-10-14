@@ -2,7 +2,6 @@ package com.quikko.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.security.Security;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -187,6 +186,11 @@ public class AppProperties {
         }
     }
 
+    /**
+     * Trust boundary settings: which upstream proxies may be trusted to set
+     * {@code X-Forwarded-For} (empty = none — always use the raw socket
+     * address), and which browser origins may open a WebSocket connection.
+     */
     public static class Security {
         private String trustedProxies = "";
         private String allowedOrigins = "";
@@ -214,6 +218,10 @@ public class AppProperties {
             this.allowedOrigins = allowedOrigins;
         }
 
+        /**
+         * Empty means same-origin only (Spring's own default when no origin
+         * patterns are registered at all).
+         */
         public List<String> allowedOriginsList() {
             return Arrays.stream(allowedOrigins.split(","))
                     .map(String::trim)
@@ -225,8 +233,8 @@ public class AppProperties {
     public static class Webrtc {
         private String stunUrls = "stun:stun.l.google.com:19302";
         private String turnUrl = "";
-        private String turnUsername = "";
-        private String turnCredential = "";
+        private String turnSecret = "";
+        private int turnCredentialTtlSeconds = 600;
 
         public String getStunUrls() {
             return stunUrls;
@@ -244,20 +252,26 @@ public class AppProperties {
             this.turnUrl = turnUrl;
         }
 
-        public String getTurnUsername() {
-            return turnUsername;
+        /**
+         * Shared secret for coturn's time-limited REST API / use-auth-secret
+         * scheme — used to compute a short-lived username/credential pair
+         * per request rather than handing out one static, reusable
+         * credential to every caller of /api/webrtc/ice-servers.
+         */
+        public String getTurnSecret() {
+            return turnSecret;
         }
 
-        public void setTurnUsername(String turnUsername) {
-            this.turnUsername = turnUsername;
+        public void setTurnSecret(String turnSecret) {
+            this.turnSecret = turnSecret;
         }
 
-        public String getTurnCredential() {
-            return turnCredential;
+        public int getTurnCredentialTtlSeconds() {
+            return turnCredentialTtlSeconds;
         }
 
-        public void setTurnCredential(String turnCredential) {
-            this.turnCredential = turnCredential;
+        public void setTurnCredentialTtlSeconds(int turnCredentialTtlSeconds) {
+            this.turnCredentialTtlSeconds = turnCredentialTtlSeconds;
         }
 
         public List<String> stunList() {
