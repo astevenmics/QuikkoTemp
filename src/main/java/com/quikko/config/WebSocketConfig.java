@@ -34,10 +34,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Plain WebSocket, no SockJS fallback -- every supported browser
+        // (including mobile Safari) has had native WebSocket support for
+        // years, so the SockJS negotiation layer (designed for IE8-era
+        // browsers) is unneeded complexity and an extra point of failure.
         registry.addEndpoint("/ws")
                 .addInterceptors(new ClientIpHandshakeInterceptor(reportService, appProperties))
-                .setAllowedOriginPatterns(appProperties.getSecurity().allowedOriginsList().toArray(new String[0]))
-                .withSockJS();
+                .setAllowedOriginPatterns(appProperties.getSecurity().allowedOriginsList().toArray(new String[0]));
     }
 
     @Override

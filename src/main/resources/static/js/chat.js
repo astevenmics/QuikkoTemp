@@ -212,7 +212,7 @@
     // ---------- STOMP ----------
     function send(destination, body) {
         if (stompClient && stompClient.connected) {
-            stompClient.send(destination, {}, JSON.stringify(body));
+            stompClient.publish({ destination, body: JSON.stringify(body) });
         }
     }
 
@@ -225,17 +225,30 @@
     }
 
     function connect() {
-        const socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
-        stompClient.debug = null;
-        stompClient.connect({}, () => {
-            stompClient.subscribe('/topic/session/' + anonId, (frame) => {
-                onServerEvent(JSON.parse(frame.body));
-            });
-            joinQueue();
-        }, () => {
-            setStatus('ended', 'Disconnected — reload to retry');
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        stompClient = new StompJs.Client({
+            brokerURL: wsProtocol + '//' + window.location.host + '/ws',
+            // No auto-reconnect: a dropped connection loses the client-side
+            // match/queue state anyway, so "reload to retry" (matching the
+            // message below) is the correct recovery path, same as before.
+            reconnectDelay: 0,
+            onConnect: () => {
+                stompClient.subscribe('/topic/session/' + anonId, (frame) => {
+                    onServerEvent(JSON.parse(frame.body));
+                });
+                joinQueue();
+            },
+            onStompError: () => {
+                setStatus('ended', 'Disconnected — reload to retry');
+            },
+            onWebSocketError: () => {
+                setStatus('ended', 'Disconnected — reload to retry');
+            },
+            onWebSocketClose: () => {
+                setStatus('ended', 'Disconnected — reload to retry');
+            },
         });
+        stompClient.activate();
     }
 
     function onServerEvent(event) {
