@@ -20,7 +20,7 @@
     function anonId() {
         let id = sessionStorage.getItem('quikko_anon_id');
         if (!id) {
-            id = crypto.randomUUID;
+            id = crypto.randomUUID();
             sessionStorage.setItem('quikko_anon_id', id);
         }
         return id;
