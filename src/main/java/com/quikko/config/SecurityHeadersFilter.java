@@ -16,7 +16,8 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             + "connect-src 'self' wss: https:; "
             + "img-src 'self' data:; "
             + "script-src 'self'; "
-            + "style-src 'self' 'unsafe-inline'";
+            + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            + "font-src 'self' https://fonts.gstatic.com";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
