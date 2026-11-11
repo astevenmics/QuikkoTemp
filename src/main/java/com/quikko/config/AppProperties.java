@@ -305,6 +305,7 @@ public class AppProperties {
         private int unlockAfterDays = 7;
         private int maxLength = 280;
         private String unlockCheckCron = "0 0 3 * * *";
+        private int retentionDays = 90;
 
         public int getUnlockAfterDays() {
             return unlockAfterDays;
@@ -328,6 +329,19 @@ public class AppProperties {
 
         public void setUnlockCheckCron(String unlockCheckCron) {
             this.unlockCheckCron = unlockCheckCron;
+        }
+
+        /**
+         * How long a capsule's message text is kept after being left, win or lose --
+         * well past the 7-day unlock window either way, purely a data-minimization backstop
+         * so a never-reciprocated or long-since-claimed note doesn't sit in the database forever.
+         */
+        public int getRetentionDays() {
+            return retentionDays;
+        }
+
+        public void setRetentionDays(int retentionDays) {
+            this.retentionDays = retentionDays;
         }
     }
 }

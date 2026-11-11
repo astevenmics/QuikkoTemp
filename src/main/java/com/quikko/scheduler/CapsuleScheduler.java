@@ -1,5 +1,6 @@
 package com.quikko.scheduler;
 
+import com.quikko.config.AppProperties;
 import com.quikko.model.Capsule;
 import com.quikko.repository.CapsuleRepository;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -25,9 +27,11 @@ public class CapsuleScheduler {
     private static final Logger log = LoggerFactory.getLogger(CapsuleScheduler.class);
 
     private final CapsuleRepository repository;
+    private final AppProperties props;
 
-    public CapsuleScheduler(CapsuleRepository repository) {
+    public CapsuleScheduler(CapsuleRepository repository, AppProperties props) {
         this.repository = repository;
+        this.props = props;
     }
 
     @Scheduled(cron = "${quikko.capsule.unlock-check-cron:0 0 3 * * *}")
@@ -68,6 +72,20 @@ public class CapsuleScheduler {
         }
         if (unlockedCount > 0) {
             log.info("Time Capsule scheduler unlocked {} capsule(s)", unlockedCount);
+        }
+    }
+
+    /**
+     * Data-minimization backstop: capsule message text has no legitimate reason to be
+     * kept once it's this old, whether it was ever claimed or never reciprocated at all.
+     */
+    @Scheduled(cron = "${quikko.capsule.unlock-check-cron:0 0 3 * * *}")
+    @Transactional
+    public void purgeExpiredCapsules() {
+        Instant cutoff = Instant.now().minus(props.getCapsule().getRetentionDays(), ChronoUnit.DAYS);
+        long deleted = repository.deleteByCreatedAtBefore(cutoff);
+        if (deleted > 0) {
+            log.info("Time Capsule scheduler purged {} capsule(s) past the retention window", deleted);
         }
     }
 }
