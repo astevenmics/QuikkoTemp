@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quikko — Cookie Policy</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="bg-blobs" aria-hidden="true"></div>
+
+<main class="landing">
+    <header class="brand">
+        <a href="/" class="logo small">⚡ Quikko</a>
+    </header>
+
+    <section class="card legal-page">
+        <h1>Cookie Policy</h1>
+        <p class="updated">Last updated: November 11, 2026</p>
+
+        <p>Quikko's server does not set any cookies — check for yourself, no page on this site sends a
+            <code>Set-Cookie</code> header. What the site does use is a small amount of browser-local storage to
+            make the chat itself work. This page lists exactly what's stored, why, and for how long.</p>
+
+        <h2>Strictly-necessary browser storage</h2>
+        <table>
+            <tr><th>Name</th><th>Type</th><th>Purpose</th><th>Duration</th></tr>
+            <tr>
+                <td><code>quikko_anon_id</code></td>
+                <td>sessionStorage</td>
+                <td>Your random session identifier — required for matching and messaging to work at all</td>
+                <td>Until you close the tab</td>
+            </tr>
+            <tr>
+                <td><code>quikko_interests</code></td>
+                <td>sessionStorage</td>
+                <td>Remembers the interests you picked before starting a chat</td>
+                <td>Until you close the tab</td>
+            </tr>
+            <tr>
+                <td><code>quikko_video_enabled</code></td>
+                <td>sessionStorage</td>
+                <td>Remembers whether you chose video or text-only mode</td>
+                <td>Until you close the tab</td>
+            </tr>
+            <tr>
+                <td><code>quikko_age_confirmed</code></td>
+                <td>sessionStorage</td>
+                <td>Remembers that you already confirmed you're 18+ this session, so you're not asked twice</td>
+                <td>Until you close the tab</td>
+            </tr>
+            <tr>
+                <td><code>quikko_cookie_ack</code></td>
+                <td>localStorage</td>
+                <td>Remembers that you dismissed the cookie notice banner, so it doesn't show again</td>
+                <td>Until you clear your browser's site data</td>
+            </tr>
+        </table>
+
+        <p>None of this storage is used for tracking, advertising, or analytics, and none of it is shared with
+            anyone — it never leaves your browser except where the storage item's own purpose requires sending it
+            (e.g. your session ID is sent to our server so it can route your chat to you).</p>
+
+        <h2>Advertising and analytics cookies</h2>
+        <p>Quikko does not currently use any advertising network, tracking pixel, or analytics tool, so there are
+            none to list. If that ever changes, we will update this page first and, where required by law, ask
+            for your consent through the cookie banner before anything is set.</p>
+
+        <h2>Controlling storage yourself</h2>
+        <p>You can clear this storage at any time through your browser's settings (usually under "Privacy" or
+            "Site data"), or simply by closing the tab, which clears everything except
+            <code>quikko_cookie_ack</code>. Doing so won't break anything other than making you re-confirm your
+            age and re-dismiss the cookie banner on your next visit.</p>
+
+        <h2>Contact</h2>
+        <p>Mystralix — <a href="mailto:mystralix.business@gmail.com">mystralix.business@gmail.com</a></p>
+    </section>
+
+    <nav class="legal-footer-nav">
+        <a href="/">Home</a> · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a> ·
+        <a href="/refund">Refund Policy</a>
+    </nav>
+</main>
+
+<script src="/js/cookie-banner.js"></script>
+</body>
+</html>

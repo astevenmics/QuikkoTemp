@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quikko — Privacy Policy</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="bg-blobs" aria-hidden="true"></div>
+
+<main class="landing">
+    <header class="brand">
+        <a href="/" class="logo small">⚡ Quikko</a>
+    </header>
+
+    <section class="card legal-page">
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated: November 11, 2026</p>
+
+        <p>Quikko is operated by <strong>Mystralix</strong> ("Mystralix", "we", "us", "our"), based in Texas,
+            United States. This policy explains what information Quikko collects when you use the service, why,
+            and for how long. If you have questions, contact us at
+            <a href="mailto:mystralix.business@gmail.com">mystralix.business@gmail.com</a>.</p>
+
+        <h2>There are no accounts</h2>
+        <p>Quikko has no sign-up, no login, no usernames, and no profiles. You never give us your name, email
+            address, or any other identifying information to use the service.</p>
+
+        <h2>What we collect, and why</h2>
+        <table>
+            <tr><th>Data</th><th>Why we have it</th><th>Where it lives</th></tr>
+            <tr>
+                <td>A random anonymous session ID</td>
+                <td>Generated in your browser so the server can route your matches and messages to you</td>
+                <td>Browser <code>sessionStorage</code> only — cleared the moment you close the tab. Never written
+                    to a database.</td>
+            </tr>
+            <tr>
+                <td>Your IP address</td>
+                <td>Read briefly to enforce rate limits and temporary bans after a report, so one person can't
+                    flood the service or keep harassing people after being reported</td>
+                <td>Kept in server memory only while your connection is open. Never stored in a database, never
+                    shown to the person you're chatting with.</td>
+            </tr>
+            <tr>
+                <td>Interests you optionally type in</td>
+                <td>Used to try to match you with someone who shares them</td>
+                <td>Server memory only, discarded once your session ends.</td>
+            </tr>
+            <tr>
+                <td>Text chat messages</td>
+                <td>Relayed in real time between you and your matched partner so the chat works</td>
+                <td>Passed through, never logged or stored.</td>
+            </tr>
+            <tr>
+                <td>Video and audio</td>
+                <td>Lets you see/hear your match</td>
+                <td>Peer-to-peer (WebRTC) directly between your browser and your match's. Quikko's servers never
+                    see, store, or record it. If a direct connection can't be made, encrypted media may be relayed
+                    through a TURN server, which does not inspect or store it.</td>
+            </tr>
+            <tr>
+                <td>Time Capsule messages (optional)</td>
+                <td>If you choose to leave a note for the stranger you just talked to, it has to be stored
+                    somewhere so it can be delivered once the 7-day window passes</td>
+                <td>Stored in our database (message text, the two anonymous session IDs involved, and timestamps).
+                    Automatically deleted 90 days after it was left, whether or not it was ever claimed.</td>
+            </tr>
+        </table>
+
+        <p>We do <strong>not</strong> collect your name, email address, phone number, precise location, or payment
+            information, because none of that is ever asked for.</p>
+
+        <h2>Server logs</h2>
+        <p>Our servers log minimal operational information for debugging and abuse prevention — things like a
+            randomly generated session identifier and a note that a message was dropped for being rate-limited.
+            We do not log chat text, video/audio, or Time Capsule content.</p>
+
+        <h2>Cookies and similar technology</h2>
+        <p>Quikko does not set tracking cookies. See our <a href="/cookies">Cookie Policy</a> for the full list of
+            the strictly-necessary browser storage the site uses to function.</p>
+
+        <h2>Advertising and analytics</h2>
+        <p>Quikko does not currently run any advertising network or analytics/tracking script. The blank ad slots
+            you may see reserve space for a future ad network and are not connected to any third party today. If
+            that changes, we'll update this policy and our Cookie Policy first, and where the law requires it,
+            ask for your consent before anything loads.</p>
+
+        <h2>Other services we rely on to run Quikko</h2>
+        <ul>
+            <li><strong>STUN/TURN servers</strong> — used to establish the peer-to-peer video/audio connection
+                between you and your match. These see only the connection information needed to do that, never
+                chat text or Time Capsule content.</li>
+            <li><strong>Our hosting provider</strong> — processes your connection as part of running the service,
+                the same way any website's host does.</li>
+        </ul>
+
+        <h2>Your rights</h2>
+        <p>Since there's no account to delete, leaving Quikko (closing the tab) ends your session and erases the
+            browser-side data immediately. If you left a Time Capsule and want it deleted before the automatic
+            90-day purge, email us at <a href="mailto:mystralix.business@gmail.com">mystralix.business@gmail.com</a>
+            with the claim token and we'll remove it. Depending on where you live, you may have additional rights
+            under laws such as the Texas Data Privacy and Security Act; contact us and we'll do our best to help,
+            though as an anonymous service we often have no way to link a request back to a specific person beyond
+            a capsule token.</p>
+
+        <h2>Children's privacy</h2>
+        <p>Quikko is restricted to users who are 18 years of age or older and is not directed at children. We do
+            not knowingly collect information from anyone under 18. If we become aware that someone under 18 has
+            used the service, we will take reasonable steps to delete any associated Time Capsule data.</p>
+
+        <h2>Security</h2>
+        <p>Connections to Quikko are encrypted in transit (HTTPS/WSS). We use rate limiting, input validation, and
+            standard security headers to reduce abuse. No method of transmission or storage is perfectly secure,
+            and we can't guarantee absolute security.</p>
+
+        <h2>Changes to this policy</h2>
+        <p>If we make material changes to this policy, we'll update the date at the top of this page and, where
+            appropriate, note it prominently on the site.</p>
+
+        <h2>Contact</h2>
+        <p>Mystralix — <a href="mailto:mystralix.business@gmail.com">mystralix.business@gmail.com</a></p>
+    </section>
+
+    <nav class="legal-footer-nav">
+        <a href="/">Home</a> · <a href="/terms">Terms of Service</a> · <a href="/cookies">Cookie Policy</a> ·
+        <a href="/refund">Refund Policy</a>
+    </nav>
+</main>
+
+<script src="/js/cookie-banner.js"></script>
+</body>
+</html>

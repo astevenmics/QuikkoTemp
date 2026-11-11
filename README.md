@@ -47,7 +47,8 @@ src/main/java/com/quikko/
     WebSocketConfig               STOMP-over-WebSocket wiring (/ws, no SockJS)
     MvcConfig                     Friendly extension-less URLs (/chat, /capsule)
     ApiRateLimitFilter             Per-IP rate limiting for /api/* (429 + Retry-After)
-    SecurityHeadersFilter          CSP, X-Frame-Options, Referrer-Policy, HSTS
+    SecurityHeadersFilter          CSP, X-Frame-Options, X-Content-Type-Options,
+                                   Permissions-Policy, Referrer-Policy, HSTS
     MysqlCredentialsCheck          Fails startup fast if DB_USERNAME/DB_PASSWORD are
                                    missing under the mysql profile
   controller/                  REST: ConfigController (interests/ICE), CapsuleController
@@ -71,7 +72,7 @@ src/main/java/com/quikko/
     store/                        MatchQueueStore & ModerationStore (in-memory)
   model/                        ChatUser, MatchPair, Capsule (JPA entity), dto/*
   repository/                  CapsuleRepository (Spring Data JPA)
-  scheduler/                   CapsuleScheduler (daily unlock sweep)
+  scheduler/                   CapsuleScheduler (daily unlock sweep + 90-day retention purge)
   validation/
     InputValidator                Strict allow-list checks used at every entry point
     ClientIpResolver               Trusted-proxy-aware X-Forwarded-For resolution
@@ -81,6 +82,7 @@ src/main/resources/
   application-dev.properties        Local-dev-only overrides
   application-mysql.properties      MySQL profile overrides
   static/                          index.html, chat.html, capsule.html, css/, js/
+                                   privacy.html, terms.html, cookies.html, refund.html
 
 src/test/java/com/quikko/...   JUnit 5 + Mockito unit tests (matching, rate limiting,
                                 Time Capsule unlock logic, input validation, IP
@@ -149,6 +151,7 @@ variables (Spring relaxed binding, e.g. `QUIKKO_MATCHING_FALLBACK_AFTER_SECONDS`
 | `quikko.interests.suggested` | Music, Movies, Gaming, … | Comma-separated suggested interest tags shown as chips |
 | `quikko.capsule.unlock-after-days` | `7` | Time Capsule unlock delay |
 | `quikko.capsule.max-length` | `280` | Max capsule message length |
+| `quikko.capsule.retention-days` | `90` | How long a capsule's message text is kept, win or lose, before the daily scheduler purges it — a data-minimization backstop, not a feature |
 
 ### Environment variables
 
@@ -258,8 +261,13 @@ chain here, by design — no accounts):
   startup immediately with a clear message if either is missing, before any bean
   (including the DataSource) is created.
 - **Baseline security headers** (`SecurityHeadersFilter`) on every response:
-  `Content-Security-Policy`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`,
-  and `Strict-Transport-Security` (only when the request is already HTTPS).
+  `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+  `Permissions-Policy` (camera/mic scoped to same-origin, everything else denied),
+  `Referrer-Policy: no-referrer`, and `Strict-Transport-Security` (only when the
+  request is already HTTPS).
+- **Time Capsule retention.** Capsule message text is purged automatically
+  `quikko.capsule.retention-days` (default 90) after it's left, whether or not it was
+  ever claimed — see `CapsuleScheduler#purgeExpiredCapsules`.
 - **Ephemeral, time-limited TURN credentials** instead of one static, reusable pair —
   `/api/webrtc/ice-servers` computes a fresh HMAC-SHA1 username/credential per request
   (coturn's use-auth-secret scheme) that stops working after
@@ -286,6 +294,18 @@ docker run -p 8080:8080 quikko
 
 Pass any of the environment variables above with `-e` (e.g. `-e SPRING_PROFILES_ACTIVE=mysql
 -e DB_HOST=... -e DB_USERNAME=... -e DB_PASSWORD=...`).
+
+## Legal pages
+
+`/privacy`, `/terms`, `/cookies`, and `/refund` are static pages (see `MvcConfig`)
+describing what little data the app actually collects (see "Input validation" and
+"Security hardening" above for the technical side of the same facts), the 18+
+eligibility requirement, and that the service is currently free with nothing to
+refund. A small cookie-notice banner (`js/cookie-banner.js`) links to the Cookie
+Policy on first visit; dismissing it just sets a `localStorage` flag, there's nothing
+to actually consent to yet since no ad network or analytics tool is wired up. These
+pages name the actual operator/contact/jurisdiction currently behind this deployment —
+update them if that ever changes.
 
 ## Continuous integration
 
