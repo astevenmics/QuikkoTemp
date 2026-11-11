@@ -9,7 +9,7 @@
     --bg: #f6f5ff;
     --card-bg: #ffffff;
     --text: #241f3d;
-    --muted: #7a7591;
+    --muted: #64607a;
     --border: #e7e4fb;
     --radius: 18px;
     --shadow: 0 10px 30px rgba(108, 92, 231, 0.15);
@@ -181,7 +181,7 @@ button { font-family: inherit; }
     border: 2px solid var(--border);
     font-size: 1rem;
 }
-.free-input-row input:focus { outline: none; border-color: var(--accent-light); }
+.free-input-row input:focus { outline: none; border-color: var(--accent-light); box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.35); }
 
 .mode-row { margin: 1.25rem 0; }
 .mode-toggle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; cursor: pointer; }
@@ -325,8 +325,8 @@ button { font-family: inherit; }
     color: var(--muted);
 }
 .status-idle { background: #f0eeff; color: var(--accent-dark); }
-.status-waiting { background: #fff4d6; color: #b7791f; }
-.status-matched { background: #e2fbf2; color: #0a9b6f; }
+.status-waiting { background: #fff4d6; color: #96570f; }
+.status-matched { background: #e2fbf2; color: #087a57; }
 .status-ended { background: #ffe8e8; color: #c0392b; }
 
 .icebreaker-banner {
@@ -519,7 +519,7 @@ button { font-family: inherit; }
     border: 2px solid var(--border);
     font-size: 0.95rem;
 }
-.chat-input-row input:focus { outline: none; border-color: var(--accent-light); }
+.chat-input-row input:focus { outline: none; border-color: var(--accent-light); box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.35); }
 
 .chat-toolbar {
     display: flex;
