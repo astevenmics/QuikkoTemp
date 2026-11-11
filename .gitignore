@@ -35,3 +35,8 @@ build/
 .idea/
 .DS_Store
 *.log
+
+### Secrets ###
+.env
+.env.*
+*.env
