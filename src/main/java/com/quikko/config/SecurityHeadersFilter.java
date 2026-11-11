@@ -24,7 +24,13 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         response.setHeader("Content-Security-Policy", CSP);
         response.setHeader("X-Frame-Options", "DENY");
+        response.setHeader("X-Content-Type-Options", "nosniff");
         response.setHeader("Referrer-Policy", "no-referrer");
+        // The app itself needs camera/mic (WebRTC) on its own origin; every
+        // other sensitive permission is denied outright, including camera/mic
+        // for any framed origin (belt-and-suspenders alongside X-Frame-Options).
+        response.setHeader("Permissions-Policy",
+                "camera=(self), microphone=(self), geolocation=(), payment=(), usb=()");
         if (request.isSecure()) {
             response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
         }
